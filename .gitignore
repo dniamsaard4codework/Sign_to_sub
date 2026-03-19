@@ -1,0 +1,44 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+
+# Generated outputs (reproducible from the notebook)
+data/example_alignment/aligned_output.vtt
+data/example_alignment/*_updated.eaf
+data/example_alignment/alignment_visualization.png
+
+# Large binary assets (pose files, embeddings)
+*.pose
+*.npy
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# numba cache
+__pycache__/
+
+# uv lock (optional — remove this line if you want to commit uv.lock)
+uv.lock
+
+# Exclude local dataset
+data/
