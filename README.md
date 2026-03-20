@@ -717,14 +717,41 @@ python SEA/align.py \
 
 ## Benchmark Performance
 
-Results on **BOBSL validation set** (British Sign Language, 32 videos, 1,973 subtitle cues):
+### BOBSL validation set (SEA code repo, 32 videos, 1,973 subtitle cues)
+
+Results using the BOBSL-finetuned SignCLIP (`sign_clip_embedding` mode), independent human-annotated GT:
 
 | Method | Frame Acc. | F1@0.10 | F1@0.25 | F1@0.50 | Mean Start Δ | Mean End Δ |
 | --- | --- | --- | --- | --- | --- | --- |
-| Segment + Align | 80.68% | 83.07% | 79.32% | 66.24% | −0.50s | −1.04s |
-| **Segment + Embed + Align** | **82.52%** | **86.37%** | **82.92%** | **72.23%** | **−0.36s** | **−0.91s** |
+| Segment + Align (temporal only) | 80.68% | 83.07% | 79.32% | 66.24% | −0.50s | −1.04s |
+| **Segment + Embed + Align (SignCLIP)** | **82.52%** | **86.37%** | **82.92%** | **72.23%** | **−0.36s** | **−0.91s** |
 
 Adding SignCLIP embeddings improves F1@0.50 by **+6 percentage points** and reduces timing errors by ~30%. The semantic similarity signal steers the DP aligner towards sign groups whose visual content matches the subtitle text, beyond what pure timing can achieve.
+
+### Paper test-set results (Table 2, arXiv:2512.08094)
+
+The paper reports F1@0.50 on held-out test sets using independent human-annotated GT:
+
+| Dataset | Method | F1@0.50 |
+| --- | --- | --- |
+| BOBSL (British SL) | SEA multilingual | 50.68% |
+| BOBSL (British SL) | SEA finetuned BSL | 54.50% |
+| How2Sign (American SL) | SEA finetuned ASL | 39.57% |
+| WMT-SLT (Swiss German SL) | SEA finetuned DSGS | 77.69% |
+| SwissSLi (Swiss SL) | SEA multilingual | 85.57% |
+
+> **Note on demo vs benchmark numbers:** The demo Thai SL results (F1@0.50 ≈ 87–89%) are **not comparable** to the BOBSL/How2Sign test-set numbers above. The demo GT (`aligned_output.vtt`) is a reference alignment — not independent human sign-annotation — so the task is substantially easier. To reproduce paper-level results, run with `sign_clip_embedding` on a dataset with truly independent human-annotated GT, and tune parameters on a training split.
+
+### Paper hyperparameter defaults (Table 5, arXiv:2512.08094)
+
+| Dataset | b-thresh | o-thresh | w\_dur | w\_gap | w\_sim | window | max\_gap |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| BOBSL | 30 | 50 | 1 | 5 | 10 | 50 | 10 s |
+| How2Sign | 40 | 50 | 5 | 0.8 | 10 | 50 | 8 s |
+| WMT-SLT | 20 | 30 | 0.5 | 5 | 5 | 50 | 6 s |
+| SwissSLi | 20 | 30 | 0.5 | 5 | 1 | 50 | 6 s |
+
+This demo uses **BOBSL DP defaults** (`w_dur=1, w_gap=5, w_sim=10, window=50, max_gap=10 s`) exactly. The segmentation uses `SIGN_O=70` (vs BOBSL default 50) because the BSL-trained model over-segments this Thai SL video at lower thresholds.
 
 ---
 
