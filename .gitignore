@@ -1,0 +1,37 @@
+# Virtual environments
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Large binary files
+*.pose
+*.mp4
+*.npy
+*.pt
+*.pth
+*.ckpt
+*.bin
+
+# fairseq_signclip (29 GB — install separately, see README)
+fairseq_signclip/
+
+# Upstream git history (kept locally for reference)
+.git_upstream/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Segmentation output (can be regenerated)
+example_alignment/segmentation_output/
