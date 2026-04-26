@@ -1,0 +1,1307 @@
+% !TEX program = xelatex
+\documentclass[11pt,a4paper]{article}
+
+% ============================================================
+%  SEA -- Segment, Embed, and Align
+%  รายงานทางเทคนิคเชิงลึกเกี่ยวกับ Pipeline ที่ใช้งานใน
+%  Workspace นี้สำหรับการจัดตำแหน่งคำบรรยายภาษามือไทย (TSL)
+% ============================================================
+
+\usepackage[a4paper,margin=2.3cm]{geometry}
+
+% ---------- XeLaTeX + Thai ----------
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setdefaultlanguage{thai}
+\setotherlanguage{english}
+
+% Thai fonts available on this Windows system
+\newfontfamily\thaifont[Script=Thai]{Angsana New}
+\setmainfont[Script=Thai, Mapping=tex-text]{Angsana New}
+\setsansfont[Script=Thai]{Browallia New}
+% Cordia New is a fixed-pitch Thai/Latin font (like Courier) — satisfies polyglossia Thai-script requirement
+\setmonofont[Script=Thai, Scale=0.9]{Cordia New}
+\newfontfamily\codefont[Scale=0.9]{Cordia New}
+
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage[hidelinks,colorlinks=true,linkcolor=blue!50!black,
+            urlcolor=blue!50!black,citecolor=blue!50!black,
+            pdftitle={รายงาน SEA Pipeline -- การจัดตำแหน่งคำบรรยาย TSL},
+            pdfauthor={NECTEC/SEA workspace},
+            bookmarksnumbered=true]{hyperref}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{multirow}
+
+% ---------- TikZ for pipeline diagrams ----------
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,shapes.geometric,shapes.misc,backgrounds,decorations.pathreplacing,patterns}
+
+% ---------- Sans-serif captions ----------
+\captionsetup{font={small,sf},labelfont={bf,sf},labelsep=period}
+
+% ---------- Listings style ----------
+\definecolor{codebg}{rgb}{0.97,0.97,0.97}
+\definecolor{codekw}{rgb}{0.10,0.30,0.70}
+\definecolor{codestr}{rgb}{0.55,0.10,0.10}
+\definecolor{codecmt}{rgb}{0.30,0.55,0.30}
+
+\lstdefinestyle{plainstyle}{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{codebg},
+  keywordstyle=\color{codekw}\bfseries,
+  stringstyle=\color{codestr},
+  commentstyle=\color{codecmt}\itshape,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{black!30},
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  showstringspaces=false,
+  tabsize=2,
+  xleftmargin=6pt,
+  xrightmargin=6pt
+}
+\lstset{style=plainstyle}
+
+% ---------- TikZ block-diagram styles ----------
+\definecolor{stageInput}{HTML}{F5E6D3}
+\definecolor{stageInputBd}{HTML}{B58A60}
+\definecolor{stageSeg}{HTML}{FFE7B3}
+\definecolor{stageSegBd}{HTML}{C6932A}
+\definecolor{stageEmb}{HTML}{D4E7F7}
+\definecolor{stageEmbBd}{HTML}{2E6CB1}
+\definecolor{stageAlign}{HTML}{D6EFD8}
+\definecolor{stageAlignBd}{HTML}{3A8C46}
+\definecolor{stagePost}{HTML}{F2D7E2}
+\definecolor{stagePostBd}{HTML}{B0497A}
+
+\tikzset{
+  stage/.style={
+    rectangle, rounded corners=4pt, draw=black!60,
+    minimum width=46mm, minimum height=10mm,
+    align=center, font=\small\sffamily,
+    inner sep=4pt
+  },
+  data/.style={
+    stage, fill=stageInput, draw=stageInputBd,
+    font=\footnotesize\sffamily,
+    minimum width=42mm, minimum height=8mm,
+    rounded corners=2pt
+  },
+  seg/.style ={stage, fill=stageSeg,   draw=stageSegBd},
+  emb/.style ={stage, fill=stageEmb,   draw=stageEmbBd},
+  ali/.style ={stage, fill=stageAlign, draw=stageAlignBd},
+  post/.style={stage, fill=stagePost,  draw=stagePostBd},
+  flow/.style={-{Stealth[length=2.5mm,width=2mm]}, thick, draw=black!70},
+  legend/.style={font=\footnotesize\sffamily}
+}
+
+% ---------- Page style ----------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily รายงาน SEA Pipeline}
+\fancyhead[R]{\small\sffamily การจัดตำแหน่งคำบรรยาย TSL}
+\fancyfoot[C]{\sffamily\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\section}{\Large\bfseries\sffamily}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\large\bfseries\sffamily}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\sffamily}{\thesubsubsection}{0.5em}{}
+
+\pdfstringdefDisableCommands{%
+  \def\texttt#1{#1}%
+  \def\textbf#1{#1}%
+  \def\textit#1{#1}%
+  \def\emph#1{#1}%
+}
+
+% ---------- Title ----------
+\title{\textbf{SEA: Segment, Embed, and Align} \\[6pt]
+       \large คำอธิบายทางเทคนิคเชิงลึกของ Pipeline การจัดตำแหน่งคำบรรยาย \\
+       ที่ประยุกต์ใช้กับภาษามือไทย --- พร้อมพื้นฐานจากบทความต้นฉบับ \\
+       และผลการทดลองจริงจาก Workspace นี้}
+\author{รายงานทางเทคนิคอัตโนมัติ \\
+        Workspace: \texttt{NECTEC/SEA}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+รายงานนี้อธิบาย \emph{Segment, Embed, and Align} (SEA) pipeline
+อย่างละเอียดในเชิงเทคนิค ตามที่ใช้งานจริงใน Workspace นี้
+และประยุกต์กับวิดีโอภาษามือไทย (TSL) ตัวอย่าง
+รายงานมีการจัดเป็นสามส่วน:
+\textbf{(i)} บทนำของ SEA ตามที่ตีพิมพ์ในบทความต้นฉบับ
+\emph{``Segment, Embed, and Align: A Universal Recipe for Aligning Subtitles to
+Signing''} โดย Jiang et al., 2025
+(\href{https://arxiv.org/abs/2512.08094}{arXiv:2512.08094})
+ซึ่งครอบคลุมแรงจูงใจ การนิยามงานอย่างเป็นทางการ คำอธิบายอัลกอริทึมเต็มรูปแบบ
+ชุดข้อมูล benchmark ทั้งสี่ชุด และผลลัพธ์ SOTA ที่ผู้เขียนเผยแพร่;
+\textbf{(ii)} การแยกย่อยทางเทคนิคของ pipeline ทีละขั้นตอน
+ตามที่รันจริงใน Workspace นี้ --- input, artefact ระหว่างกลาง,
+command line, พารามิเตอร์, คณิตศาสตร์ภายใน, ตำแหน่งโค้ด, และ output;
+\textbf{(iii)} รายงานผลการทดลองครบถ้วนที่ได้จากวิดีโอบรรยาย TSL จริง
+(172 คำบรรยาย, 11~นาที 07~วินาที) ครอบคลุมการทดลองเก้าชุด
+(\texttt{A}, \texttt{B1}, \texttt{B2}, \texttt{B\_MULTI}, \texttt{C\_MULTI},
+\texttt{C\_MULTI\_word}, \texttt{D\_ASL}, \texttt{D\_ASL\_gloss},
+\texttt{D\_ASL\_word}) รวมถึงตัวเลขผลลัพธ์จริงที่ได้จากการรัน
+\texttt{evaluate\_all.py} ระหว่างการเขียนรายงานนี้
+\end{abstract}
+
+\tableofcontents
+\clearpage
+
+% ============================================================
+\part{พื้นฐาน --- บทความ SEA}
+% ============================================================
+
+\section{แรงจูงใจ: ทำไมต้องจัดตำแหน่งคำบรรยายภาษามือ?}
+\label{sec:motivation}
+
+การจัดตำแหน่งภาษามือ (Sign-language alignment) คือภารกิจในการนำคำบรรยายที่เป็นข้อความ---
+ซึ่งเดิมผลิตขึ้นสำหรับเสียงของรายการ---และปรับ timestamp
+ให้ตรงกับช่วงเวลาที่ผู้แปลภาษามือแสดงท่าทางที่สอดคล้องกันจริงๆ
+บทความ SEA ต้นฉบับเปิดด้วยเหตุผลเชิงปฏิบัติสองประการที่สำคัญ
+
+\paragraph{ข้อมูลคู่ขนานสำหรับการแปลภาษามือ}
+ระบบการแปลภาษามือรุ่นปัจจุบัน \cite{muller-etal-2022-findings,muller-etal-2023-findings}
+ต้องการข้อมูลจำนวนมาก และ corpus ขนาดใหญ่ที่สุด---โดยเฉพาะ BOBSL
+(46 ชั่วโมงของรายการโทรทัศน์ BBC ที่มีล่ามภาษามือ)---มาพร้อมคำบรรยายที่
+\emph{จัดตำแหน่งตามเสียง} ไม่ใช่ \emph{จัดตำแหน่งตามท่าทาง}
+ล่ามที่ต้องฟังก่อนแล้วค่อยแปลเป็นภาษามือมักล่าช้ากว่าเสียง 1--3 วินาที
+ดังนั้นคำบรรยายที่มีอยู่จึงคลาดเคลื่อนอย่างเป็นระบบ
+การจัดตำแหน่งใหม่เป็นเงื่อนไขเบื้องต้นสำหรับการฝึก model การแปล
+
+\paragraph{การเข้าถึงและการบรรยายภายหลัง}
+สำหรับผู้ชมที่หูหนวกที่ดู YouTube content ที่ผู้ใช้สร้างขึ้น
+การจัดตำแหน่งอัตโนมัติของไฟล์คำบรรยายที่มีสัญญาณรบกวนในรอบแรก
+จะลดความพยายามของมนุษย์ในการผลิตคำบรรยายที่ใช้งานได้อย่างมาก
+บทความ SEA อ้างถึงการวัดผลของ Bull et al.\ 2021 ที่ว่าผู้เชี่ยวชาญ
+ที่คล่องภาษามือต้องใช้เวลา 10--15 ชั่วโมงในการจัดตำแหน่งคำบรรยาย
+ต่อวิดีโอหนึ่งชั่วโมงด้วยมือ; ในอัตรา WMT-SLT~22 ที่ \$40 ต่อชั่วโมง
+นั่นคือ \$400--600 ต่อชั่วโมงของรายการ
+
+\paragraph{ทำไมแนวทางก่อนหน้าจึงมีข้อจำกัด}
+Model end-to-end สองตัวเป็น state of the art ก่อน SEA: \emph{SAT}
+(Bull et al., 2021) และผู้สืบทอด \emph{SAT$^{+}$} (Jang et al., 2025)
+ทั้งสองเป็น transformer encoder ที่ fine-tune บนข้อมูล BSL/English
+ที่จัดตำแหน่งด้วยมือ $\sim$17.7 ชั่วโมง--- นั่นคือต้องการสิ่งที่พยายามผลิตอยู่แล้ว
+นอกจากนี้ยังทำนายในระดับ frame ภายในหน้าต่าง 20 วินาที
+และแก้ไขความขัดแย้งระหว่างหน้าต่างด้วย DTW ซึ่งเป็นแบบ local โดยพื้นฐาน
+
+\paragraph{ข้อเสนอของ SEA}
+SEA นำเสนอเป็นทางเลือกที่ \emph{ไม่ต้องฝึก, ใช้ได้กับทุกภาษา}
+สมมติว่ามี model ภาษามือที่ฝึกมาแล้วสองตัว (segmenter และ embedder)
+และแทนที่ trained-aligner ด้วย dynamic programme แบบ global แบบไม่มี gradient
+บน \emph{ทั้ง episode} การแลกเปลี่ยน: การค้นหาพารามิเตอร์เล็กน้อยต่อ dataset
+แลกกับการไม่ต้องการ supervision การจัดตำแหน่งแบบ in-domain และ pipeline แบบ modular
+
+
+\section{นิยามงานอย่างเป็นทางการและ Pipeline สามขั้นตอน}
+\label{sec:formal-task}
+
+\subsection{Input และ Output}
+\paragraph{ที่ให้มา}
+วิดีโอภาษามือต่อเนื่องและลำดับหน่วยคำบรรยาย $t_1, \ldots, t_n$
+แต่ละอันมีเวลาเริ่มต้นและสิ้นสุด (ที่อาจมีเสียงรบกวน)
+$\bigl(\mathrm{start}(t_i), \mathrm{end}(t_i)\bigr)$
+\paragraph{เป้าหมาย}
+ปรับ timestamp เริ่มต้น/สิ้นสุดของทุก $t_i$ ให้ตรงกับการแสดงท่าทางมากขึ้น
+
+\subsection{สามขั้นตอนแบบ modular}
+SEA แบ่งปัญหาออกเป็นสามขั้นตอนแบบ plug-and-play;
+สองขั้นแรกเป็น model ที่ฝึกมาแล้ว ขั้นที่สามเป็นงานใหม่
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{Segment} frames วิดีโอต่อเนื่องเป็นท่าทางแต่ละท่า
+        $s_1, \ldots, s_m$ พร้อม $\bigl(\mathrm{start}(s_j), \mathrm{end}(s_j)\bigr)$
+        คล้ายกับการแบ่ง token ข้อความแต่ไม่มี vocabulary มาตรฐาน
+  \item \textbf{Embed} ท่าทางแต่ละ $s_j$ และหน่วยคำบรรยายแต่ละ $t_i$
+        เข้าสู่ space ที่ซ่อนร่วมกัน $\mathbb{R}^d$
+        ความคล้ายคลึง cross-modal $\langle u_i, v_j \rangle$ จึงมีความหมาย
+  \item \textbf{Align}: เลือก สำหรับทุก $t_i$, ช่วงที่ \emph{ต่อเนื่อง}
+        $\{s_l, \ldots, s_r\}$ ที่ลด global cost รวมเทอมการจัดตำแหน่ง/prosodic
+        และ (เพิ่มเติม) ความคล้ายคลึงเชิงความหมายที่ให้โดย embedding;
+        เขียน timestamp ของ $t_i$ ใหม่ตามขอบเขตของช่วงที่เลือก
+\end{enumerate}
+
+บทความแยกตัวแปรอัลกอริทึมสองตัว:
+\textbf{Segment and Align} (เฉพาะ timing) และ \textbf{Segment, Embed, and
+Align} (timing + semantics) ทั้งคู่ใช้การวนซ้ำ DP เดียวกัน;
+ตัวที่สองเพิ่มเทอมพิเศษหนึ่งเทอมใน cost
+
+% ----------- High-level architecture diagram (paper view) -----------
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[node distance=10mm and 12mm]
+  % data inputs
+  \node[data]                                    (vid)   {video.mp4};
+  \node[data, right=of vid]                      (subs)  {subtitle.vtt};
+
+  % segmentation
+  \node[seg, below=14mm of vid, minimum width=40mm]   (pose) {การประมาณท่าทาง\\\scriptsize MediaPipe Holistic};
+  \node[seg, below=8mm of pose, minimum width=40mm]   (seg)  {(1) Segment\\\scriptsize Linguistic segmenter (E4s-1)};
+  \node[data, below=8mm of seg, minimum width=40mm]   (signs){ท่าทาง $s_1,\dots,s_m$\\\scriptsize {[}EAF: SIGN+SENTENCE{]}};
+
+  % embedding (signs)
+  \node[emb, right=18mm of seg, minimum width=40mm]   (embS) {(2a) Embed ท่าทาง\\\scriptsize SignCLIP pose encoder};
+  % embedding (text)
+  \node[emb, right=18mm of embS, minimum width=40mm]  (embT) {(2b) Embed คำบรรยาย\\\scriptsize SignCLIP text encoder};
+
+  % shared latent
+  \node[data, below=8mm of embS, minimum width=42mm]  (vEmb) {$v_j \in \mathbb{R}^{768}$};
+  \node[data, below=8mm of embT, minimum width=42mm]  (uEmb) {$u_i \in \mathbb{R}^{768}$};
+
+  % alignment
+  \node[ali, below=10mm of $(vEmb)!0.5!(uEmb)$, minimum width=85mm]
+        (align){(3) Align (global DP)\\\scriptsize cost = onset + offset + $w_{\rm dur}$\,$\Delta$\,dur + $w_{\rm gap}$\,gap $-$ $w_{\rm sim}$\,$\Sigma$};
+
+  % output
+  \node[data, below=8mm of align, minimum width=70mm] (out){คำบรรยายที่จัดตำแหน่งแล้ว\\\scriptsize updated.eaf + aligned.vtt};
+
+  % arrows
+  \draw[flow] (vid)   -- (pose);
+  \draw[flow] (pose)  -- (seg);
+  \draw[flow] (seg)   -- (signs);
+  \draw[flow] (signs.east) -| (embS.south);
+  \draw[flow] (subs.south) |- ([yshift=2mm]embT.north) -- (embT);
+  \draw[flow] (embS) -- (vEmb);
+  \draw[flow] (embT) -- (uEmb);
+  \draw[flow] (vEmb) -- (align);
+  \draw[flow] (uEmb) -- (align);
+  \draw[flow] (align) -- (out);
+
+  % background banner labels
+  \begin{scope}[on background layer]
+    \node[draw=stageSegBd, dashed, fit=(pose)(seg)(signs), inner sep=2mm,
+          rounded corners=3pt, label={[legend, anchor=west, text=stageSegBd]
+          west:\textbf{ขั้นตอนที่ 1: Segment}}] {};
+    \node[draw=stageEmbBd, dashed, fit=(embS)(embT)(vEmb)(uEmb), inner sep=2mm,
+          rounded corners=3pt, label={[legend, anchor=west, text=stageEmbBd]
+          west:\textbf{ขั้นตอนที่ 2: Embed}}] {};
+    \node[draw=stageAlignBd, dashed, fit=(align)(out), inner sep=2mm,
+          rounded corners=3pt, label={[legend, anchor=west, text=stageAlignBd]
+          west:\textbf{ขั้นตอนที่ 3: Align}}] {};
+  \end{scope}
+\end{tikzpicture}
+\caption{สถาปัตยกรรม SEA สามขั้นตอนตามที่อธิบายในบทความ
+กล่องสีเหลืองคือ pipeline segmentation (ฝึกมาแล้ว),
+กล่องสีน้ำเงินคือ SignCLIP encoders (ฝึกมาแล้ว, dual-tower),
+และกล่องสีเขียวคืองานใหม่: DP แบบ global ที่เลือกช่วงท่าทางต่อเนื่องสำหรับทุกคำบรรยาย}
+\label{fig:sea-arch}
+\end{figure}
+
+\subsection{ทำไมถึงใช้งานได้เป็น universal recipe}
+บทความนำเสนอสามจุดสถาปัตยกรรมที่ควรอ้างถึง
+\begin{itemize}[leftmargin=1.5em]
+  \item Model \emph{segmentation} ของท่าทางที่ฝึกบนภาษามือหนึ่งสามารถถ่ายโอน
+        แบบ zero-shot ไปยังภาษาอื่น เพราะจำแนก primitive การเคลื่อนไหว
+        ไม่ใช่ความหมาย Moryossef et al.\ 2023 รายงาน ROC-AUC 0.76
+        บน French Sign Language แม้ฝึกบน DGS
+  \item SignCLIP, model embedding, ฝึกแบบ \emph{multilingual}
+        บน SpreadtheSign (41 ภาษามือบนฝั่งวิดีโอ; อังกฤษบนฝั่งข้อความ)
+        การ finetune เฉพาะภาษาให้ผลดีขึ้นเมื่อมีข้อมูล in-domain
+        แต่ไม่จำเป็น
+  \item DP \emph{global} optimum เข้าถึงทุกท่าทางใน episode
+        ไม่ใช่แค่หน้าต่าง 20 วินาที ดังนั้นจึงตัดสินใจสม่ำเสมอ
+        และไม่ต้องการการประมวลผลหลัง DTW แยกต่างหาก
+\end{itemize}
+
+
+\section{Model Segmentation อย่างละเอียด}
+\label{sec:paper-seg}
+
+บทความใช้ model segmentation ทางภาษาศาสตร์ของ Moryossef et al.\ 2023
+(\emph{``Linguistically Motivated Sign Language Segmentation''})
+ฝึกบนข้อมูล DGS ที่มี annotation ประมาณ $\sim$73 ชั่วโมงจาก Public DGS Corpus,
+รับ pose จาก MediaPipe Holistic และส่ง BIO tag ต่อ frame (\textsc{B}eginning,
+\textsc{I}nside, \textsc{O}utside) ผ่าน bidirectional LSTM ขนาดเล็ก
+checkpoint เฉพาะที่ใช้คือ \texttt{model\_E4s-1.pth} (\texttt{E4s-1}),
+พร้อมพารามิเตอร์ scalar สองตัวที่แปลง probability ต่อ frame เป็น span discrete:
+\begin{description}[leftmargin=1.6em,style=nextline]
+  \item[\texttt{b-threshold} (ช่วง 0--100)] Probability ที่เหนือกว่านี้
+  ถือว่า frame เป็นขอบเขตระหว่างท่าทางสองท่าที่อยู่ติดกัน ค่าต่ำทำให้ segmentation ละเอียดขึ้น
+  บทความพบค่าที่ดีที่สุดที่ 30 (BOBSL) และ 20--40 สำหรับ dataset อื่น
+  \item[\texttt{o-threshold} (ช่วง 0--100)] Probability ที่เหนือกว่านี้
+  ถือว่า frame อยู่นอกการแสดงท่าทาง (การหยุดพัก) บทความใช้ 30--50
+\end{description}
+
+\paragraph{ทำไมถึงใช้ segmenter นี้แทนตัวใหม่กว่า?}
+บทความเปรียบเทียบทางเลือกหลายอย่างใน ablation study (ตาราง 4):
+model ที่ฝึกบน BSL-Corpus ของ Renz et al.\ 2021a/b บรรลุ F1 \emph{segmentation}
+สูงกว่าบน BSLCP (47.71 vs.\ 31.13) แต่ F1 alignment \emph{ต่ำกว่า} บน BOBSL
+(57.98 vs.\ 66.24) บทความให้เหตุผลว่า (i) ช่องว่าง domain ระหว่าง BSLCP และ BOBSL
+(ii) แนวโน้มของ Renz et al. ที่จะสร้าง signing-positive บน frame ที่ไม่ใช่การแสดงท่าทาง
+และ (iii) ความจริงที่ว่า alignment ปลายน้ำดูเหมือนจะได้ประโยชน์จาก
+\emph{over-segmented เล็กน้อย} SEA จึงยึดใช้ model DGS ของ Moryossef
+
+\paragraph{รายละเอียด implementation ที่เกี่ยวข้องกับ workspace นี้}
+CLI ที่ใช้คือ \texttt{pose\_to\_segments}, แจกจ่ายจาก
+\texttt{github.com/J22Melody/segmentation@bsl} เขียนไฟล์ ELAN \texttt{.eaf}
+ที่มีสอง tier: \texttt{SIGN} (annotation ต่อท่าทาง) และ \texttt{SENTENCE}
+(กลุ่มท่าทางที่อยู่ติดกันซึ่งก่อตัวเป็นวลี)
+
+
+\section{Model Embedding อย่างละเอียด (SignCLIP)}
+\label{sec:paper-emb}
+
+SignCLIP (Jiang et al., EMNLP~2024) คือ dual encoder แบบ CLIP
+สาขา text เป็น transformer แบบ BERT; สาขาท่าทางเริ่มต้นจาก
+BERT weights เดียวกันและปรับให้รับลำดับ frame pose จาก MediaPipe
+แทน sub-word ทั้งสองสาขาส่ง vector L2-normalized ขนาด 768 มิติ
+และฝึกด้วย contrastive InfoNCE loss ระหว่างคู่ที่จัดตำแหน่งแล้ว
+
+\paragraph{Pretraining (\emph{SignCLIP-multilingual})}
+checkpoint พื้นฐานที่ SEA ใช้คือ \texttt{baseline\_temporal}
+(codename \texttt{E7.2}), pretrain บน SpreadtheSign---41 ภาษามือฝั่งวิดีโอ;
+อังกฤษฝั่งข้อความ---ดังนั้นจึงมีแบบแผน language-tag prepending
+\texttt{<en> <bfi>} (BSL/English), \texttt{<en> <ase>} (ASL/English),
+\texttt{<de> <sgg>} (DSGS/German)
+
+\paragraph{การ Finetune เฉพาะภาษา}
+บทความผลิต checkpoint เพิ่มเติมสามตัวโดย finetune \emph{SignCLIP-multilingual}
+บน corpus เฉพาะภาษาต่างกัน:
+\begin{itemize}[leftmargin=1.5em]
+  \item \emph{SignCLIP-BSL}: $\sim$3.5 ล้าน sign spottings จาก BOBSL
+        (Momeni et al., 2022), ใช้ text objective แบบ contrastive บน 8,697 sign ที่แตกต่างกัน
+  \item \emph{SignCLIP-ASL}: $\sim$200k ตัวอย่างรวมจาก PopSign
+        (Starner et al., 2023), ASL Citizen (Desai et al., 2023), และ Sem-Lex (Kezar et al., 2023)
+  \item \emph{SignCLIP-Suisse}: 16,213 รายการศัพท์จาก Signsuisse
+        แต่ละรายการจับคู่กับประโยคตัวอย่าง
+\end{itemize}
+
+\paragraph{ความสัมพันธ์ ISLR$\,\leftrightarrow\,$alignment}
+บทความสังเกตความสัมพันธ์เชิงบวกที่สม่ำเสมอระหว่างคะแนน
+isolated-sign-language-recognition (ISLR) ของ embedding
+และ F1 alignment ปลายน้ำ สำหรับ BSL:
+SignCLIP-multilingual ได้ ISLR 0.5 และ F1@0.50 ที่ 66.70;
+SignCLIP-BSL ได้ ISLR 43.0 และ F1@0.50 ที่ 72.78
+
+
+\section{อัลกอริทึม Alignment อย่างละเอียด (คำอธิบายจากบทความ)}
+\label{sec:paper-align}
+
+\subsection{ฟังก์ชัน Cost}
+สำหรับการกำหนดผู้สมัคร cue $t_i$ ให้กับช่วงท่าทางต่อเนื่อง
+$\{s_l, \ldots, s_r\}$, บทความนิยาม cost ต่อคู่ดังนี้
+\begin{align}
+\phi(t_i,\,s_{l:r}) \;=\;
+& \bigl|\mathrm{start}(t_i) - \mathrm{start}(s_l)\bigr|
+  + \bigl|\mathrm{end}(t_i)   - \mathrm{end}(s_r)\bigr| \nonumber\\
+& + w_{\mathrm{dur}} \,\bigl|\,\mathrm{dur}(t_i) - \mathrm{dur}(s_{l:r})\,\bigr|
+  + w_{\mathrm{gap}} \,G(l,r) \nonumber\\
+& - w_{\mathrm{sim}} \,\Sigma(i;\,l,r),
+\label{eq:cost}
+\end{align}
+โดยที่เทอม inter-sign-gap คือ
+\[
+G(l,r) \;=\;
+\sum_{j=l}^{r-1} \max\bigl(0,\;\mathrm{start}(s_{j+1}) - \mathrm{end}(s_j)\bigr),
+\]
+และเทอม cumulative similarity คือ
+$\Sigma(i;\,l,r) = \sum_{j=l}^{r} M_{ij}$
+โดยที่ $M$ คือ similarity matrix (masked locality, normalized row-softmax)
+การตั้งค่า $w_{\mathrm{sim}} = 0$ ได้ variant \emph{Segment and Align}
+แบบ timing-only; เมื่อ $w_{\mathrm{sim}} > 0$ จะได้ \emph{Segment, Embed, and Align}
+
+\subsection{ข้อจำกัด Locality และการ Normalize ด้วย Softmax}
+สำหรับทุก cue row $i$, บทความเก็บเฉพาะ
+\texttt{win\_size}${} = 50$ ท่าทางที่ใกล้เคียงเชิงเวลาที่สุด
+(อื่น mask เป็น 0) จากนั้น row-softmax-normalize ด้วยอุณหภูมิ $\tau = 10$
+ผลลัพธ์คือ ``matrix ของค่าที่กระจุกตัวรอบ diagonal เชิงเวลา'' (บทความ, \S A.2)
+
+\subsection{การวนซ้ำ DP แบบ Global}
+ตาราง DP คือ
+\[
+\mathrm{dp}[i,j] \;=\;
+\min_{i-1 \le k < j} \mathrm{dp}[i-1, k] + \phi(t_i,\,s_{k:j-1}),
+\quad \mathrm{dp}[0,0]=0,\; \mathrm{dp}[0,j>0]=\infty.
+\]
+อัลกอริทึม \emph{ไม่} กำหนดให้ cue สุดท้ายต้องลงบน sign สุดท้าย
+หลังจากเติมตาราง จุดสิ้นสุดที่ดีที่สุดคือ
+$j^\star = \arg\min_{0\le j \le m} \mathrm{dp}[n, j]$
+และ backtracking กู้คืน assignment
+
+\subsection{การกลั่นกรอง Sub-group}
+หลังจาก DP แบบ global เลือกขอบเขต span $[l_i, r_i]$ สำหรับแต่ละ cue
+การ post-processing แบบ local แบ่ง span เป็น sub-span สูงสุด
+ที่ช่องว่างภายในทั้งหมด $\le$ \texttt{max\_gap} จากนั้นเลือก sub-span
+ที่มี local cost ต่ำที่สุด
+
+\subsection{Offset คงที่ก่อนและหลัง DP}
+ทั้งก่อน \emph{และ} หลัง DP, ทุก cue ถูก shift ด้วยคู่ offset คงที่
+$(\delta_s, \delta_e)$ ที่ได้จาก random search บทความสังเกตว่า
+``offset 1 วินาทีคงที่ที่ใช้หลัง DP เป็นประโยชน์เสมอใน dataset ที่ประเมิน''
+
+\subsection{การค้นหาพารามิเตอร์แบบสุ่ม}
+สำหรับแต่ละ dataset ที่มี training set บทความรัน combinations สุ่มมากถึง
+$10{,}000$ ครั้งบน CPU 128 ตัว ($\sim$1 วันของการค้นหา)
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{พารามิเตอร์} & \textbf{BOBSL} & \textbf{How2Sign} & \textbf{WMT-SLT} & \textbf{SwissSLi} \\
+\midrule
+Start offset ก่อน DP            & 2.6  & 1.3  & 1.4  & 0.49 \\
+End offset ก่อน DP              & 2.1  & 1.5  & 1.6  & 0.56 \\
+Start offset หลัง DP            & 0.0  & 0.0  & 0    & 0    \\
+End offset หลัง DP              & 1.0  & 1.0  & 1    & 1    \\
+\texttt{b-threshold} segmentation & 30  & 40   & 20   & 20   \\
+\texttt{o-threshold} segmentation & 50  & 50   & 30   & 30   \\
+\texttt{win\_size}               & 50   & 50   & 50   & 50   \\
+\texttt{max\_gap} (วินาที)       & 10   & 8    & 6    & 6    \\
+$w_{\mathrm{dur}}$               & 1    & 5    & 0.5  & 0.5  \\
+$w_{\mathrm{gap}}$               & 5    & 0.8  & 5    & 5    \\
+$w_{\mathrm{sim}}$               & 10   & 10   & 5    & 1    \\
+\bottomrule
+\end{tabular}
+\caption{การตั้งค่าพารามิเตอร์ที่ดีที่สุดต่อ dataset ที่รายงานในบทความ SEA
+(Appendix ตาราง 5) offset และ gap เป็นวินาที}
+\label{tab:paper-params}
+\end{table}
+
+
+\section{ชุดข้อมูลและ Baseline (จากบทความ)}
+\label{sec:paper-data}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{lXrrrr}
+\toprule
+\textbf{ชุดข้อมูล} & \textbf{ภาษา / แหล่งที่มา} & \textbf{Episodes} & \textbf{คำบรรยาย} & \textbf{ชั่วโมง} & \textbf{Offset (วินาที)} \\
+\midrule
+BOBSL          & BSL/อังกฤษ, รายการ BBC ผสม (ล่าม)   & 55    & 31,479 & $\sim$46  & 2.70/2.70 \\
+How2Sign       & ASL/อังกฤษ, บันทึก studio re-signing & 2,528 & 35,191 & $\sim$80  & 1.57/2.13 \\
+WMT-SLT~SRF    & DSGS/เยอรมัน, ข่าว live interpretation & 29  & 7,071  & $\sim$16  & 1.06/1.75 \\
+SwissSLi mit.\ & DSGS/เยอรมัน, รายการแปลโดยคนหูหนวก & 14   & 554    & $\sim$1   & 0.49/0.56 \\
+\bottomrule
+\end{tabularx}
+\caption{ชุดข้อมูลภาษามือสี่ชุดในการประเมิน SEA (ตารางบทความ 1)
+Offset คือการ shift ค่ามัธยฐาน (หรือค่าเฉลี่ยสำหรับ BOBSL)
+ระหว่างคำบรรยายที่จัดตำแหน่งตามเสียงและแบบมนุษย์}
+\label{tab:paper-datasets}
+\end{table}
+
+\paragraph{เมตริกการประเมิน: F1@0.50}
+คำบรรยายที่ทำนายนับว่าถูกต้องเมื่อ segment ที่ทำนายทับซ้อนกับ ground truth
+ด้วย intersection-over-union (IoU) $\ge 0.50$
+
+\paragraph{ผลลัพธ์หลัก (ตารางบทความ 2)} SEA เป็น SOTA บนทุก test set
+
+\begin{table}[h]
+\centering
+\small
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+& \textbf{BOBSL Test} & \textbf{How2Sign Test} & \textbf{WMT-SLT Test} & \textbf{SwissSLi Test} \\
+\midrule
+Original                                             & 14.11 & 33.06 & 46.85 & 60.48 \\
+Original$^{+}$                                       & 44.61 & 36.21 & 74.83 & ---   \\
+SAT                                                  & 54.57 & ---   & 75.32 & ---   \\
+SAT$^{+}$                                            & 63.81 & ---   & ---   & ---   \\
+\midrule
+\textbf{Segment and Align}                           & 49.58 & 36.17 & 76.83 & 84.19 \\
+\textbf{SEA (multilingual)}                          & 50.68 & 37.51 & 76.43 & \textbf{85.57} \\
+\textbf{SEA (lang-finetuned)}                        & 54.50 & \textbf{39.57} & \textbf{77.69} & 85.22 \\
+\textbf{SignCLIP-BSL + SAT$^{+}$}                    & \textbf{65.68} & --- & --- & --- \\
+\bottomrule
+\end{tabular}}
+\caption{F1@0.50 บนชุดข้อมูล test สี่ชุด, ตารางบทความ 2 (เฉพาะคอลัมน์ test)
+SEA เป็น SOTA บนทุก test set}
+\label{tab:paper-results}
+\end{table}
+
+\paragraph{Pseudocode (Appendix Figure 4 ของบทความ)}
+
+\begin{lstlisting}
+# ขั้นตอนที่ 1 -- Segment
+signs = segmenter(video)
+# ขั้นตอนที่ 2 -- Embed
+v_emb = embed_sign(signs)
+t_emb = embed_text(subtitles)
+sim_matrix = dot_product(t_emb, v_emb)
+# ขั้นตอนที่ 3 -- Align
+def cost(cue, span):
+    a = abs(cue.start - span.start)
+    b = abs(cue.end - span.end)
+    c = abs(cue.duration - span.duration)
+    d = compute_internal_gap(span)
+    e = compute_total_similarity(cue, span)
+    return a + b + w_dur*c + w_gap*d - w_sim*e
+
+sim_matrix = zero_out(sim_matrix, win_size)
+sim_matrix = softmax_normalize(sim_matrix)
+
+dp     = aligner(signs, subtitles, cost, sim_matrix)
+bounds = backtrack(dp)
+
+# การกลั่นกรอง internal gap
+for i in range(len(subtitles)):
+    group     = signs[bounds[i]:bounds[i+1]]
+    subgroups = split_on_gap(group, max_gap)
+    alignments[i] = pick_best(subgroups, subtitles[i], cost)
+
+# อัปเดต timestamp
+for i in range(len(subtitles)):
+    subtitles[i].start = alignments[i][0].start
+    subtitles[i].end   = alignments[i][-1].end
+\end{lstlisting}
+
+\clearpage
+% ============================================================
+\part{Workspace นี้ --- TSL Pipeline}
+% ============================================================
+
+\section{เป้าหมายโครงการบนภาษามือไทย}
+
+Workspace นี้ปรับ SEA ให้ใช้กับภาษามือไทย (TSL)
+codebase เป็น fork ของ \href{https://github.com/J22Melody/SEA}{J22Melody/SEA}
+(commit \texttt{5aaf27d}) บวก SignCLIP encoder จาก
+\href{https://github.com/J22Melody/fairseq}{J22Melody/fairseq},
+พร้อม patch เล็กน้อยที่จำเป็นสำหรับ Windows และ multi-model live embedding
+(\S\ref{sec:patches})
+
+\subsection{สองภารกิจที่กำหนดสำหรับ TSL}
+\paragraph{ภารกิจที่ 1 (จุดสนใจของรายงานนี้)}
+นำ CC cue จำนวน 172 รายการที่มี timestamp จัดตำแหน่งตามเสียง
+และผลิต timestamp จัดตำแหน่งตามภาพที่ตรงกับ annotation ผู้เชี่ยวชาญ
+119 รายการ (\texttt{CC\_Aligned}) ที่ผลิตโดยนักวิจัย
+
+\paragraph{ภารกิจที่ 2 (งานในอนาคต)}
+ขยาย annotation Gloss ระดับประโยค (119 รายการ)
+เป็น annotation ต่อท่าทาง 852 รายการ \texttt{Gloss\_Labeling}
+โดยอัตโนมัติ
+
+\subsection{ตัวอย่าง TSL หนึ่งตัวที่ใช้ตลอดรายงาน}
+วิดีโอบรรยาย \emph{``การเปรียบเทียบและเรียงลำดับ''} 11~นาที 07~วินาที,
+1920$\times$1080@60fps ทั้งสี่ tier ground-truth ใน EAF คือ:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{lXr}
+\toprule
+\textbf{Tier} & \textbf{เนื้อหา} & \textbf{จำนวน} \\
+\midrule
+\texttt{CC}             & คำบรรยายภาษาไทยดิบ จัดตำแหน่งตามเสียง (input) & 172 \\
+\texttt{CC\_Aligned}    & คำบรรยายที่จัดตำแหน่งใหม่ด้วยมือ \emph{(GT)}  & 119 \\
+\texttt{Gloss}          & สตริง gloss ภาษามือ ระดับประโยค                & 119 \\
+\texttt{Gloss Labeling} & Annotation gloss ต่อท่าทาง                     & 852 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+\section{การอธิบาย Pipeline ทีละขั้นตอน}
+\label{sec:walkthrough}
+
+สำหรับแต่ละขั้นตอนระบุ \textbf{(a)} \emph{ขั้นตอนนี้คืออะไร},
+\textbf{(b)} \emph{ทำงานอย่างไรใน Workspace นี้} (commands, พารามิเตอร์, อ้างอิงโค้ด),
+\textbf{(c)} \emph{รายละเอียดอัลกอริทึม} ที่ควรทราบ,
+และ \textbf{(d)} \emph{artefact ที่ขั้นตอนนี้ผลิต}
+
+% ============================================================
+% Workspace pipeline diagram
+% ============================================================
+\begin{figure}[ht]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[node distance=8mm and 9mm, scale=1, transform shape]
+  % --- แถวบน: inputs
+  \node[data]                              (mp4)  {04.mp4\\\scriptsize 1920$\times$1080@60fps};
+  \node[data, right=of mp4]                (eaf)  {original .eaf\\\scriptsize CC, CC\_Aligned, Gloss, Gloss\_Lab.};
+
+  % ขั้นตอน 1: extract CC
+  \node[seg, below=of eaf, minimum width=42mm] (s1) {ขั้นตอน 1: Extract CC\\\scriptsize extract\_cc\_from\_eaf.py};
+  \node[data, below=of s1] (vtt) {04.vtt\\\scriptsize 172 cues};
+
+  % ขั้นตอน 2: pose
+  \node[seg, below=of mp4, minimum width=42mm] (s2) {ขั้นตอน 2: Pose estimation\\\scriptsize MediaPipe Holistic, complexity=2};
+  \node[data, below=of s2] (pose) {04.pose\\\scriptsize 358 MB binary};
+
+  % ขั้นตอน 3: segmentation
+  \node[seg, below=14mm of pose, minimum width=86mm, anchor=west, xshift=0mm]
+        (s3) {ขั้นตอน 3: Segmentation\\\scriptsize segmentation.py + pose\_to\_segments (E4s-1, b=30, o=50)};
+  \node[data, below=of s3, minimum width=86mm] (segeaf) {04.eaf (E4s-1\_30\_50)\\\scriptsize SIGN: 2780~~|~~SENTENCE: 418};
+
+  % ขั้นตอน 4: embedding
+  \node[emb, right=12mm of s3, minimum width=46mm] (s4) {ขั้นตอน 4: Embedding\\\scriptsize extract\_episode\_features.py};
+  \node[data, below=of s4, minimum width=46mm] (npys) {ไฟล์ .npy\\\scriptsize signs (2780$\times$768)\\subtitles (172$\times$768)};
+
+  % ขั้นตอน 5: align
+  \node[ali, below=14mm of segeaf, minimum width=130mm]
+        (s5){ขั้นตอน 5: Align (DP)\\\scriptsize align.py + align\_dp.py (numba JIT) + align\_similarity.py};
+  \node[data, below=of s5, minimum width=130mm] (aligned)
+        {aligned\_output\_*/04.vtt (9 การทดลอง)\\\scriptsize 04\_updated.eaf with SUBTITLE\_SHIFTED tier};
+
+  % ขั้นตอน 6: postprocess
+  \node[post, below=of aligned, minimum width=130mm]
+        (s6){ขั้นตอน 6: Post-processing \& Evaluation\\\scriptsize fix\_overlap\_vtt.py, merge\_cc\_to\_updated\_eaf.py, add\_vtt\_tiers\_to\_eaf.py, evaluate\_all.py};
+
+  % aux gloss VTT
+  \node[seg, left=15mm of s5, minimum width=44mm, yshift=0mm]
+        (gloss){เพิ่มเติม: Gloss-VTT\\\scriptsize make\_gloss\_cc\_vtt.py};
+  \node[data, above=of gloss, minimum width=44mm] (gvtt){subtitles\_gloss\_cc\_time/04.vtt};
+
+  % arrows
+  \draw[flow] (mp4)  -- (s2);
+  \draw[flow] (s2)   -- (pose);
+  \draw[flow] (eaf)  -- (s1);
+  \draw[flow] (s1)   -- (vtt);
+  \draw[flow] (pose) -- (s3);
+  \draw[flow] (vtt.south) |- ([yshift=4mm]s3.north -| s3.east) -- (s3.east);
+  \draw[flow] (s3)   -- (segeaf);
+  \draw[flow] (segeaf.east) -| (s4);
+  \draw[flow] (pose.east)   -| ([xshift=-1mm]s4.north);
+  \draw[flow] (s4)          -- (npys);
+  \draw[flow] (segeaf)      -- (s5);
+  \draw[flow] (npys.south)  |- (s5.east);
+  \draw[flow] (vtt.east) -| ([xshift=-2mm]gloss.north);
+  \draw[flow] (eaf.south) -| ([xshift=2mm]gloss.north);
+  \draw[flow] (gloss) -- (gvtt);
+  \draw[flow] (gvtt.east) -| ([yshift=4mm]s5.west) -- (s5.west);
+  \draw[flow] (s5)        -- (aligned);
+  \draw[flow] (aligned)   -- (s6);
+\end{tikzpicture}%
+}
+\caption{End-to-end workspace pipeline สีเหลือง = การรับข้อมูล/segmentation;
+สีน้ำเงิน = SignCLIP embedding; สีเขียว = DP alignment แบบ global;
+สีชมพู = post-processing และ evaluation; สีครีม = artefact ข้อมูล
+(พร้อมขนาด/จำนวนจริงใน workspace) กล่องที่ระบุว่า ``\emph{เพิ่มเติม}''
+คือเครื่องมือที่พัฒนาใน workspace นี้ ไม่ใช่ส่วนของ SEA upstream}
+\label{fig:full-pipeline}
+\end{figure}
+
+% --------------------------------------------------------------
+\subsection{ขั้นตอนที่ 0: Environment}
+\label{sec:step0}
+
+\paragraph{คืออะไร}
+Python 3.11 virtual environment พร้อม PyTorch (CUDA 12.8
+สำหรับ NVIDIA RTX 5060\,Ti ในเครื่อง, Blackwell, sm\_120),
+MediaPipe ที่ pin ที่ \texttt{0.10.21}, BSL-branch sign segmenter,
+บวกไลบรารี subtitle/EAF มาตรฐาน
+
+\paragraph{Hardware} Intel Core Ultra 7 265K (20 cores), RAM 64 GB,
+RTX 5060\,Ti พร้อม VRAM 17.1 GB, Windows 11
+
+\paragraph{การติดตั้ง (ครั้งเดียว)}
+\begin{lstlisting}
+python -m venv venv
+venv\Scripts\activate
+pip install pysrt webvtt-py lxml numpy pympi-ling
+pip install "mediapipe==0.10.21" pose-format
+pip install beartype numba tqdm scikit-learn tabulate
+pip install "git+https://github.com/J22Melody/segmentation@bsl"
+pip install --force-reinstall torch \
+    --index-url https://download.pytorch.org/whl/cu128
+\end{lstlisting}
+
+\paragraph{ปัญหาที่พบระหว่างการติดตั้ง}
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{MediaPipe ต้องเป็น 0.10.21}: เวอร์ชัน 0.10.22 ขึ้นไปทำให้
+        \texttt{videos\_to\_poses} พัง
+  \item \textbf{PyTorch \texttt{cu128}} จำเป็นสำหรับ sm\_120; cu126
+        จะ fallback ไป CPU อย่างเงียบๆ บน Blackwell
+  \item \texttt{numba} จำเป็นสำหรับ JIT-compiled DP inner loop
+  \item \texttt{video\_ids.txt} ต้องเป็น UTF-8 ไม่มี BOM
+        \texttt{echo 04 > video\_ids.txt} บน Windows ผลิต UTF-16 BOM
+        และทำให้ segmenter พัง
+\end{itemize}
+
+\paragraph{ผลลัพธ์} Environment ที่ reproducible ที่ \texttt{SEA/venv/}
+
+
+% --------------------------------------------------------------
+\subsection{ขั้นตอนที่ 1: Extract CC จาก EAF ไปยัง WebVTT}
+\label{sec:step1}
+
+\paragraph{คืออะไร}
+ไฟล์ annotation ภาษาไทยต้นฉบับอยู่ในรูปแบบ XML ของ ELAN
+SEA คาดว่า subtitle จะอยู่ใน WebVTT (หรือ SRT)
+ขั้นตอนนี้ parse tier \texttt{CC} จาก EAF และเขียน \texttt{.vtt} มาตรฐาน
+
+\paragraph{โค้ด} \texttt{example\_alignment/extract\_cc\_from\_eaf.py}
+
+\paragraph{อัลกอริทึม}
+\begin{enumerate}[leftmargin=1.5em]
+  \item Parse EAF ด้วย \texttt{xml.etree.ElementTree}
+  \item สร้าง dictionary \texttt{TIME\_SLOT\_ID $\to$ วินาที}
+        (EAF เก็บเวลาเป็นมิลลิวินาที)
+  \item ค้นหา \texttt{TIER} ที่ \texttt{TIER\_ID="CC"},
+        จากนั้นสำหรับทุก \texttt{ANNOTATION} อ่าน \texttt{TIME\_SLOT\_REF1/REF2}
+        และข้อความ \texttt{ANNOTATION\_VALUE}
+  \item เรียง cue ตามเวลาเริ่มต้นและส่ง WebVTT มาตรฐาน
+\end{enumerate}
+
+\paragraph{ผลลัพธ์ (ยืนยันแล้ว)} \texttt{04.vtt} ที่มีคำบรรยายพอดี \textbf{172} รายการ
+
+
+% --------------------------------------------------------------
+\subsection{ขั้นตอนที่ 2: Pose Estimation}
+\label{sec:step2}
+
+\paragraph{คืออะไร}
+แปลงวิดีโอ pixel-domain เป็นลำดับโครงกระดูกมนุษย์
+MediaPipe Holistic ทำนาย 543 landmark ต่อ frame:
+33 ร่างกาย, 21$\times$2 มือ, และ 468 จุดใบหน้า
+
+\paragraph{รัน}
+\begin{lstlisting}
+videos_to_poses --format mediapipe --directory . \
+  --additional-config="model_complexity=2,smooth_landmarks=false,refine_face_landmarks=true"
+\end{lstlisting}
+
+\paragraph{ทำไมถึงใช้การตั้งค่านี้}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{model\_complexity=2}: ความแม่นยำสูงสุด ใช้เวลา CPU ประมาณ 15 นาทีต่อวิดีโอ 11 นาที 60fps
+  \item \texttt{smooth\_landmarks=false}: segmenter เองเป็น LSTM ที่ smooth ระหว่าง frame; การ pre-smooth จะลบขอบเขตออก
+  \item \texttt{refine\_face\_landmarks=true}: TSL ใช้ non-manual ของใบหน้า/ริมฝีปากในระดับเดียวกับรูปมือ
+\end{itemize}
+
+\paragraph{ผลลัพธ์ (ยืนยันแล้ว)} \texttt{04.pose} (\textbf{358 MB} binary)
+
+
+% --------------------------------------------------------------
+\subsection{ขั้นตอนที่ 3: Sign Segmentation}
+\label{sec:step3}
+
+\paragraph{คืออะไร}
+ตัด pose stream ต่อเนื่องเป็นหน่วยท่าทางแต่ละท่า
+และจัดกลุ่มเป็นประโยค output เป็น EAF ที่มีสอง tier:
+\texttt{SIGN} (หนึ่งรายการต่อท่าทาง) และ \texttt{SENTENCE}
+(กลุ่มท่าทางต่อเนื่องที่ก่อตัวเป็นวลี)
+
+\paragraph{Model} \texttt{model\_E4s-1.pth} (ส่วนที่~\ref{sec:paper-seg}), ฝึกบน DGS แต่ถ่ายโอนแบบ zero-shot
+
+\paragraph{รัน}
+\begin{lstlisting}
+cd SEA
+python segmentation.py \
+  --sign-b-threshold 30 --sign-o-threshold 50 --num_workers 1 \
+  --video_ids ..\example_alignment\video_ids.txt \
+  --pose_dir  ..\example_alignment \
+  --save_dir  ..\example_alignment\segmentation_output \
+  --video_dir ..\example_alignment
+\end{lstlisting}
+
+\paragraph{Patch ใน Workspace}
+\begin{lstlisting}
+# ก่อน (พังบน Windows):
+result = subprocess.run(cmd, shell=True)
+# หลัง (ทำงานได้บน Windows):
+result = subprocess.run(shlex.split(cmd), shell=False)
+\end{lstlisting}
+
+\paragraph{ผลลัพธ์ (ยืนยันแล้ว)}
+\texttt{segmentation\_output/E4s-1\_30\_50/04.eaf} ที่มี
+\textbf{2,780} รายการ \texttt{SIGN} และ \textbf{418} รายการ \texttt{SENTENCE}
+
+
+% --------------------------------------------------------------
+\subsection{ขั้นตอนที่ 4: Embedding (SignCLIP)}
+\label{sec:step4}
+
+\paragraph{คืออะไร}
+Embed ทุก segment \texttt{SIGN} เป็น vector 768 มิติ
+และ embed ทุก cue คำบรรยายเข้าสู่ space 768 มิติ \emph{เดียวกัน}
+เพื่อให้เปรียบเทียบได้โดยตรงด้วย dot product
+
+\paragraph{สาม checkpoint ที่ใช้ใน workspace}
+\begin{itemize}[leftmargin=1.5em]
+  \item \texttt{bsl} ($\to$ \texttt{bobsl\_finetune}): SignCLIP-multilingual
+        ที่ finetune บน BOBSL sign spottings $\sim$3.5 ล้านรายการ
+  \item \texttt{multilingual} ($\to$ \texttt{baseline\_temporal}):
+        base ที่ pretrain บน SpreadtheSign
+  \item \texttt{asl} ($\to$ \texttt{asl\_finetune}): finetune บน PopSign+ASL Citizen+Sem-Lex
+\end{itemize}
+
+\paragraph{ผลลัพธ์ (ยืนยันแล้ว)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{lXr}
+\toprule
+\textbf{ไฟล์} & \textbf{Variant} & \textbf{Shape ที่ยืนยัน} \\
+\midrule
+\texttt{segmentation\_embedding/sign\_clip/04.npy}            & BSL signs           & 2780$\times$768 \\
+\texttt{segmentation\_embedding/sign\_clip\_multi/04.npy}     & Multilingual signs  & 2780$\times$768 \\
+\texttt{segmentation\_embedding/sign\_clip\_asl/04.npy}       & ASL signs           & 2780$\times$768 \\
+\texttt{subtitle\_embedding/sign\_clip/04.npy}                & BSL, CC text        & 172$\times$768  \\
+\texttt{subtitle\_embedding/sign\_clip\_multi/04.npy}         & Multi, CC text      & 172$\times$768  \\
+\texttt{subtitle\_embedding/sign\_clip\_multi\_gloss/04.npy}  & Multi, Gloss text   & 172$\times$768  \\
+\texttt{subtitle\_embedding/sign\_clip\_asl/04.npy}           & ASL, CC text        & 172$\times$768  \\
+\texttt{subtitle\_embedding/sign\_clip\_asl\_gloss/04.npy}    & ASL, Gloss text     & 172$\times$768  \\
+\bottomrule
+\end{tabularx}
+\caption{Embedding artefact ทั้งหมดที่มีใน workspace นี้ Shape ยืนยันโดยการโหลดทุก \texttt{.npy} ด้วย numpy}
+\label{tab:embeddings}
+\end{table}
+
+
+% --------------------------------------------------------------
+\subsection{เพิ่มเติม: สร้าง Gloss-text VTT}
+\label{sec:gloss-vtt}
+
+\paragraph{ทำไม}
+text encoder ของ SignCLIP ไม่เคยฝึกบนประโยคภาษาไทยเต็มรูปแบบ
+แต่รู้จัก token gloss ของภาษามือ (ซึ่งคล้ายกับข้อมูล gloss-style
+ที่ encoder เห็นระหว่าง pretraining)
+การแทนที่ประโยคภาษาไทยด้วย gloss ภาษามือที่สอดคล้องกัน
+ทำให้ similarity matrix มีการแยกแยะดีขึ้น
+
+\paragraph{ผลลัพธ์}
+ข้อความ CC \emph{``เราจะเรียนเกี่ยวกับการเปรียบเทียบและการเรียงลำดับตัวเลข''}
+กลายเป็น gloss \emph{``HELLO STUDENT NEXT WHERE LEARN COMPARISON ORDERING''}
+--- สั้น แบบ sign-vocabulary ตรงกับสิ่งที่ text encoder ของ SignCLIP ชอบ
+
+
+% --------------------------------------------------------------
+\subsection{ขั้นตอนที่ 5: Alignment ผ่าน Dynamic Programming}
+\label{sec:dp}
+
+นี่คือหัวใจทางเทคนิคของ SEA Driver:
+\texttt{SEA/align.py}; DP recurrence: \texttt{SEA/align\_dp.py};
+similarity matrix: \texttt{SEA/align\_similarity.py}
+
+\subsubsection{ขั้นตอน 5.1 --- Pre-shift bias}
+SEA เริ่มต้นด้วยการ shift ทุก cue $c_i$ ไปข้างหน้าในเวลา
+ด้วย $(\delta_s, \delta_e)$ คงที่ สำหรับ BOBSL บทความพบ $(2.6, 2.1)$\,วินาที
+สำหรับตัวอย่าง TSL workspace นี้ใช้:
+\begin{itemize}[leftmargin=1.5em]
+  \item $(2.6, 2.1)$\,วินาที สำหรับ profile CC-text มาตรฐาน (B1)
+  \item $(1.8, 1.5)$\,วินาที สำหรับ profile CC-text ที่ tuned (B2/B\_MULTI/D\_ASL)
+  \item $(1.3, 1.0)$\,วินาที สำหรับ profile Gloss-text (C\_MULTI/*\_gloss/*\_word)
+\end{itemize}
+
+\subsubsection{ขั้นตอน 5.2 --- หน้าต่าง Candidate}
+สำหรับทุก cue $c_i$ อัลกอริทึมจำกัดความสนใจไปที่
+\texttt{dp\_window\_size} sign segments ที่จุดกึ่งกลางเชิงเวลาอยู่ใกล้ที่สุด
+(default 50; profile ที่ tuned ใช้ 40)
+สิ่งที่อยู่นอกหน้าต่างได้รับ cost อนันต์และ similarity 0
+ข้อจำกัด locality นี้ bound run-time DP เป็นประมาณ $O(M \cdot W^2)$
+
+\subsubsection{ขั้นตอน 5.3 --- Similarity matrix}
+\label{sec:simmatrix}
+ด้วย \texttt{--similarity\_measure sign\_clip\_embedding},
+raw similarity ระหว่าง cue $i$ และ sign $j$
+คือ dot product ของ embedding L2-normalized สองตัว:
+\[
+M^{0}_{ij} = \langle u_i, v_j\rangle, \quad u_i \in \mathbb{R}^{768},\;
+v_j \in \mathbb{R}^{768}.
+\]
+
+\subsubsection{ขั้นตอน 5.4 --- ฟังก์ชัน Cost}
+\label{sec:cost}
+เหมือนกับสมการ~\eqref{eq:cost} ด้วย profile ที่ tuned ที่ \texttt{C\_MULTI},
+weights คือ $w_{\mathrm{dur}}{=}2$, $w_{\mathrm{gap}}{=}8$,
+$w_{\mathrm{sim}}{=}6$, \texttt{max\_gap}${=}6$\,วินาที,
+\texttt{window\_size}${=}40$
+
+\subsubsection{ขั้นตอน 5.5 --- DP Recurrence}
+เหมือนกับส่วนที่~\ref{sec:paper-align} ด้วย $M=172$ และ $N=2780$,
+ตารางมี $173 \times 2781$ รายการ backtracking เริ่มที่
+$j^\star = \arg\min_j \mathrm{dp}[M, j]$
+
+\subsubsection{ขั้นตอน 5.6 --- JIT Inner Loop}
+\texttt{align\_dp.dp\_inner\_loop} ถูก decorate ด้วย \texttt{numba.@njit}
+เมื่อเปิด JIT, episode 11 นาทีเสร็จในเวลาน้อยกว่าหนึ่งวินาที
+
+\subsubsection{Concrete invocation (B2)}
+\begin{lstlisting}
+python align.py --overwrite --mode=inference \
+  --video_ids ..\example_alignment\video_ids.txt --num_workers 1 \
+  --dp_duration_penalty_weight 2 --dp_gap_penalty_weight 8 \
+  --dp_max_gap 6 --dp_window_size 40 \
+  --sign-b-threshold 30 --sign-o-threshold 50 \
+  --pr_subs_delta_bias_start 1.8 --pr_subs_delta_bias_end 1.5 \
+  --similarity_measure sign_clip_embedding --similarity_weight 6 \
+  --pr_sub_path           ..\example_alignment\subtitles \
+  --segmentation_dir      ..\example_alignment\segmentation_output \
+  --subtitle_embedding_dir     ..\example_alignment\subtitle_embedding\sign_clip \
+  --segmentation_embedding_dir ..\example_alignment\segmentation_embedding\sign_clip \
+  --save_dir ..\example_alignment\aligned_output_with_embedding_tuned
+\end{lstlisting}
+
+
+% --------------------------------------------------------------
+\subsection{ขั้นตอนที่ 6: Post-processing}
+\label{sec:post}
+
+\subsubsection{การลบ cue ที่ทับซ้อน}
+output ของ SEA มักมี cue ที่ทับซ้อน: ประมาณ 88\% ของคู่ที่อยู่ติดกันทับซ้อนกัน
+เพราะมี cue input 172 รายการแต่มีเพียง $\sim$119 slot ที่จัดตำแหน่งโดยมนุษย์
+script \texttt{fix\_overlap\_vtt.py} clamp end ของแต่ละ cue
+เป็น start ของ cue ถัดไป:
+\[
+\mathrm{end}(c_i) \;\leftarrow\; \min\bigl(\mathrm{end}(c_i),\,
+\mathrm{start}(c_{i+1})\bigr).
+\]
+
+\subsubsection{การรวม tier ต้นฉบับกลับเข้า EAF ที่อัปเดต}
+\texttt{merge\_cc\_to\_updated\_eaf.py} คัดลอกสี่ tier ต้นฉบับ
+(\texttt{CC}, \texttt{CC\_Aligned}, \texttt{Gloss}, \texttt{Gloss Labeling})
+กลับเข้า \texttt{04\_updated.eaf}
+
+\subsubsection{การเพิ่ม output การทดลองทั้งหมดเป็น ELAN tier}
+\label{sec:add-tiers}
+\texttt{add\_vtt\_tiers\_to\_eaf.py} รวม VTT output ที่จัดตำแหน่งแล้วทั้งหมด
+เข้าไฟล์ ELAN เดียว---\emph{comparison EAF}---เพื่อให้นักวิจัย
+เปรียบเทียบภาพได้บน timeline เดียว
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Tier} & \textbf{จำนวน annotation} \\
+\midrule
+\texttt{CC}                           & 172 \\
+\texttt{CC\_Aligned} (GT)             & 119 \\
+\texttt{Gloss}                        & 119 \\
+\texttt{Gloss Labeling}               & 852 \\
+\texttt{SUBTITLE\_B2}                 & 172 \\
+\texttt{SUBTITLE\_B\_MULTI}           & 172 \\
+\texttt{SUBTITLE\_C\_MULTI}           & 172 \\
+\texttt{SUBTITLE\_C\_MULTI\_word}     & 172 \\
+\texttt{SUBTITLE\_D\_ASL}             & 172 \\
+\texttt{SUBTITLE\_D\_ASL\_gloss}      & 172 \\
+\texttt{SUBTITLE\_D\_ASL\_word}       & 172 \\
+\bottomrule
+\end{tabular}
+\caption{รายการ tier ที่ยืนยันแล้วของ comparison EAF ใน workspace นี้
+การโหลดไฟล์ใน ELAN จะวาง 11 track ทั้งหมดบน timeline เดียว}
+\label{tab:comparison-eaf}
+\end{table}
+
+\clearpage
+% ============================================================
+\part{ผลการทดลองจริง}
+% ============================================================
+
+\section{การทดลอง}
+\label{sec:exp}
+
+Workspace มีไดเรกทอรี output ที่จัดตำแหน่งแล้วเก้าไดเรกทอรี
+ดังแสดงในตาราง~\ref{tab:exp-list} ซึ่งต่างกันเฉพาะ embedding model
+(BSL / Multilingual / ASL), แหล่งข้อความที่ป้อนให้ SignCLIP (CC vs.\ Gloss),
+DP weights (profile \emph{มาตรฐาน} vs.\ \emph{tuned}),
+และว่าใช้ word-level tokenization หรือไม่
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}l p{0.34\linewidth}
+                              >{\raggedright\arraybackslash}X
+                              c@{}}
+\toprule
+\textbf{ID} & \textbf{คำอธิบาย} & \textbf{โฟลเดอร์} & \textbf{จำนวน cue} \\
+\midrule
+A                 & ไม่มี embedding, DP มาตรฐาน              & \texttt{aligned\_output}                         & 172 \\
+B1                & BSL emb., DP มาตรฐาน                     & \texttt{aligned\_output\_with\_embedding}        & 172 \\
+B2                & BSL emb., DP \emph{tuned}                & \texttt{aligned\_output\_with\_embedding\_tuned} & 172 \\
+B\_MULTI          & Multilingual + CC text, B2 weights       & \texttt{aligned\_output\_multi\_b2}              & 172 \\
+\textbf{C\_MULTI} & \textbf{Multilingual + Gloss text (ดีที่สุด)} & \texttt{aligned\_output\_multi\_gloss}      & 172 \\
+C\_MULTI\_word    & Multilingual + Gloss + word-level        & \texttt{aligned\_output\_multi\_gloss\_word}     & 172 \\
+D\_ASL            & ASL + CC text                            & \texttt{aligned\_output\_asl\_b2}                & 172 \\
+D\_ASL\_gloss     & ASL + Gloss text                         & \texttt{aligned\_output\_asl\_gloss}             & 172 \\
+D\_ASL\_word      & ASL + Gloss + word-level                 & \texttt{aligned\_output\_asl\_gloss\_word}       & 172 \\
+\bottomrule
+\end{tabularx}
+\caption{การทดลองเก้าชุดที่ดำเนินการใน workspace นี้
+จำนวน cue ยืนยันโดยการนับ \texttt{-->} markers ในแต่ละ VTT;
+ทุก output รักษา cardinality ของ input ที่ 172}
+\label{tab:exp-list}
+\end{table}
+
+\subsection{ตัวเลขหลัก (live, รันระหว่างการเขียนรายงาน)}
+\label{sec:live-numbers}
+
+\begin{table}[h]
+\centering
+\small
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{การทดลอง} & \textbf{ค่าเฉลี่ย} & \textbf{มัธยฐาน} & \textbf{S.D.} &
+\textbf{$\pm 1$\,วินาที} & \textbf{$\pm 2$\,วินาที} & \textbf{$\pm 3$\,วินาที} & \textbf{ทับซ้อน} \\
+\midrule
+B2   (BSL, CC text, tuned)       & $+1.02$\,s & $-0.05$\,s & $5.53$\,s & 74\,\% & 96\,\% & 97\,\% & 88.3\,\% \\
+B\_MULTI (multi, CC text)        & $+0.91$\,s & $-0.05$\,s & $5.50$\,s & 78\,\% & \textbf{97\,\%} & \textbf{99\,\%} & 88.3\,\% \\
+\textbf{C\_MULTI} (multi, Gloss) & \textbf{$+0.49$\,s} & \textbf{$-0.15$\,s} & $5.54$\,s & \textbf{80\,\%} & 96\,\% & \textbf{99\,\%} & \textbf{87.7\,\%} \\
+C\_MULTI\_word                   & $+0.51$\,s & $-0.15$\,s & $5.48$\,s & 77\,\% & 96\,\% & 99\,\% & 88.3\,\% \\
+D\_ASL  (ASL, CC text)           & $+1.25$\,s & $+0.37$\,s & $5.54$\,s & 59\,\% & 81\,\% & 96\,\% & 88.9\,\% \\
+D\_ASL\_gloss                    & $+0.77$\,s & $-0.10$\,s & $5.50$\,s & 64\,\% & 91\,\% & 97\,\% & 88.3\,\% \\
+D\_ASL\_word                     & $+0.78$\,s & $-0.11$\,s & $5.50$\,s & 67\,\% & 93\,\% & 96\,\% & 87.7\,\% \\
+\midrule
+\textit{CC\_Aligned} (GT)        & $0$\,s & $0$\,s & $0$\,s & 100\,\% & 100\,\% & 100\,\% & \textbf{0.0\,\%} \\
+\bottomrule
+\end{tabular}
+\caption{\textbf{คุณภาพ alignment บนวิดีโอ TSL ทดสอบ} (รัน 2026-04-25)
+\texttt{ค่าเฉลี่ย/มัธยฐาน/S.D.} คือ offset เวลาเริ่มต้น signed vs.\ \texttt{CC\_Aligned};
+บวก = SEA วาง caption ช้ากว่ามนุษย์
+\texttt{ทับซ้อน} คือสัดส่วนของคู่ cue ที่อยู่ติดกันที่ทับซ้อน
+\emph{ก่อน} ที่จะใช้ \texttt{fix\_overlap\_vtt.py}}
+\label{tab:results-tsl}
+\end{table}
+
+\subsection{การอ่านผลลัพธ์}
+
+\begin{itemize}[leftmargin=1.5em]
+  \item \textbf{SignCLIP Multilingual ดีกว่าทั้ง BSL และ ASL บน TSL}
+        แม้ว่า multilingual base จะไม่เคยฝึกบนข้อมูล TSL,
+        การครอบคลุม 41 ภาษาบนฝั่งวิดีโอและ text decoder ภาษาอังกฤษ
+        ถ่ายโอนได้ดีกว่า variant เฉพาะภาษาทั้งสอง
+  \item \textbf{Gloss text ดีกว่า CC text มาก}
+        การแทนที่ประโยคภาษาไทยด้วย gloss ที่สอดคล้องกัน
+        ลด mean offset จาก $+0.91$\,s เป็น $+0.49$\,s
+        และเพิ่ม coverage $\pm 1$\,s จาก 78\% เป็น 80\%
+  \item \textbf{Word-level pooling ไม่มีประโยชน์ที่สม่ำเสมอบนวิดีโอนี้}
+        \texttt{C\_MULTI\_word} และ \texttt{D\_ASL\_word} ทำงานได้ภายใน noise
+        ของคู่ระดับประโยค
+  \item \textbf{Overlap rate เป็น structural}
+        172 cue input แต่มีเพียง $\sim$119 slot ที่แตกต่างใน ground truth
+        $\Rightarrow$ ทุก variant ผลิต overlap $\sim$88\% ซึ่งแก้ไข
+        ด้วย \texttt{fix\_overlap\_vtt.py} ในการแสดงผล
+\end{itemize}
+
+\subsection{ผลลัพธ์ post-processing (การลบ overlap)}
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+\textbf{ไฟล์} & \textbf{ก่อน} & \textbf{หลัง} \\
+\midrule
+\texttt{aligned\_output\_multi\_gloss/04.vtt}      & 150/171 (87.7\,\%) & \textbf{0/171 (0.0\,\%)} \\
+\texttt{aligned\_output\_asl\_gloss/04.vtt}        & 151/171 (88.3\,\%) & \textbf{0/171 (0.0\,\%)} \\
+\bottomrule
+\end{tabular}
+\caption{Overlap ก่อนและหลัง clamping pass เชิงสำอาง
+ไฟล์ \texttt{04\_no\_overlap.vtt} ที่สอดคล้องกันมีอยู่ใน workspace
+และแนะนำสำหรับการแสดงผลต่อมนุษย์ ไม่ใช่การประเมิน}
+\label{tab:overlap-postproc}
+\end{table}
+
+\subsection{ชุดพารามิเตอร์ที่ดีที่สุดบน TSL}
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+\textbf{พารามิเตอร์} & \textbf{ดีที่สุดบน TSL (C\_MULTI)} \\
+\midrule
+\texttt{--similarity\_measure}              & \texttt{sign\_clip\_embedding} \\
+\texttt{--similarity\_weight}               & 6 \\
+\texttt{--dp\_duration\_penalty\_weight}    & 2 \\
+\texttt{--dp\_gap\_penalty\_weight}         & 8 \\
+\texttt{--dp\_window\_size}                 & 40 \\
+\texttt{--dp\_max\_gap}                     & 6 \\
+\texttt{--sign-b-threshold}                 & 30 \\
+\texttt{--sign-o-threshold}                 & 50 \\
+\texttt{--pr\_subs\_delta\_bias\_start}     & 1.3 \\
+\texttt{--pr\_subs\_delta\_bias\_end}       & 1.0 \\
+\texttt{--post\_subs\_delta\_bias\_start}   & 0.0 \\
+\texttt{--post\_subs\_delta\_bias\_end}     & 1.0 \\
+SignCLIP variant                            & \texttt{multilingual} \\
+Subtitle text                               & \texttt{subtitles\_gloss\_cc\_time/04.vtt} \\
+\bottomrule
+\end{tabularx}
+\caption{ชุดพารามิเตอร์ที่ผลิต mean offset ต่ำที่สุดบนวิดีโอ TSL ทดสอบ ($+0.49$\,s)}
+\label{tab:best-params}
+\end{table}
+
+
+% ============================================================
+\section{จุดที่ปรับได้ตลอด Pipeline ทั้งหมด}
+% ============================================================
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{22mm}
+                              >{\raggedright\arraybackslash}p{47mm}
+                              >{\raggedright\arraybackslash}X
+                              >{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{ขั้นตอน} & \textbf{Flag} & \textbf{บทบาท} & \textbf{ผลกระทบ} \\
+\midrule
+Pose estimation     & \texttt{model\_complexity}            & ความแม่นยำ/ความเร็ว MediaPipe & สูงขึ้น = ช้าลง, landmark ดีขึ้น \\
+Segmentation        & \texttt{-{}-sign-b-threshold}         & cutoff ความน่าจะเป็น boundary & สูง $\Rightarrow$ segment น้อยลง \\
+Segmentation        & \texttt{-{}-sign-o-threshold}         & cutoff ``outside signing''   & สูง $\Rightarrow$ รักษาการเคลื่อนไหวอ่อน \\
+Pre-DP shift        & \texttt{-{}-pr\_subs\_delta\_bias\_*} & bias audio$\to$visual หยาบ  & ตั้งตาม median offset ของ GT \\
+Embedding           & \texttt{-{}-live\_model\_name}        & SignCLIP variant             & multi / BSL / ASL \\
+Embedding text      & \texttt{-{}-pr\_sub\_path}            & CC vs.\ Gloss VTT            & Gloss ดีกว่าบน TSL \\
+DP cost             & \texttt{-{}-dp\_duration\_penalty\_weight} & $w_{\mathrm{dur}}$      & สูง $\Rightarrow$ match duration แน่น \\
+DP cost             & \texttt{-{}-dp\_gap\_penalty\_weight} & $w_{\mathrm{gap}}$           & สูง $\Rightarrow$ หลีก span ที่มีช่องว่าง \\
+DP cost             & \texttt{-{}-similarity\_weight}       & $w_{\mathrm{sim}}$           & สูง $\Rightarrow$ เชื่อ embedding \\
+Post-DP shift       & \texttt{-{}-post\_subs\_delta\_bias\_*} & padding end เพิ่มเติม      & 1\,s end pad ``เป็นประโยชน์เสมอ'' \\
+Post-process        & \texttt{fix\_overlap\_vtt.py}         & clamp เวลาสิ้นสุด            & 88\,\% $\to$ 0\,\% overlap (การแสดงผล) \\
+\bottomrule
+\end{tabularx}
+\caption{ทุกจุดที่ปรับได้ใน SEA pipeline ตามที่ใช้งานใน workspace นี้}
+\label{tab:tunable}
+\end{table}
+
+
+% ============================================================
+\section{แผนที่โค้ด}
+% ============================================================
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+\textbf{ไฟล์} & \textbf{บทบาท} \\
+\midrule
+\texttt{SEA/segmentation.py}        & Wrapper สำหรับ \texttt{pose\_to\_segments}; วนซ้ำบน grid พารามิเตอร์ (model, b, o); ผลิต EAF ของ \texttt{SIGN}/\texttt{SENTENCE} \\
+\texttt{SEA/align.py}               & Driver pipeline: โหลด cue + signs, รัน similarity, dispatch DP, เขียน VTT/EAF \\
+\texttt{SEA/align\_dp.py}           & Numba-JIT DP recurrence + sub-group refinement post-pass \\
+\texttt{SEA/align\_similarity.py}   & คำนวณ similarity matrix หลายแบบ พร้อม normalization \\
+\texttt{SEA/config.py}              & Argparse layer; flag CLI ทั้งหมด \\
+\texttt{SEA/utils.py}               & Subtitle I/O (VTT/SRT), shifting, EAF I/O, normalization helpers \\
+\texttt{example\_alignment/extract\_cc\_from\_eaf.py} & EAF $\to$ VTT extractor (ขั้นตอน 1) \\
+\texttt{example\_alignment/make\_gloss\_cc\_vtt.py}   & Gloss-text VTT builder (ส่วนที่~\ref{sec:gloss-vtt}) \\
+\texttt{example\_alignment/fix\_overlap\_vtt.py}      & End-time clamping overlap fixer \\
+\texttt{example\_alignment/evaluate\_all.py}          & คำนวณ metrics ในตาราง~\ref{tab:results-tsl} \\
+\bottomrule
+\end{tabularx}
+\caption{ตำแหน่งของแต่ละส่วนของ pipeline ใน workspace นี้}
+\label{tab:code-map}
+\end{table}
+
+
+% ============================================================
+\section{Patch ที่ใช้กับ Upstream}
+\label{sec:patches}
+% ============================================================
+
+\subsection{SEA fork (vs.\ commit \texttt{5aaf27d})}
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{\texttt{SEA/align.py}}: เพิ่ม multi-model live embedding ผ่าน
+      \texttt{--live\_model\_name}, \texttt{--live\_language\_tag};
+      การโหลด segmentation embeddings ที่คำนวณล่วงหน้า;
+      dynamic path resolution
+\item \textbf{\texttt{SEA/align\_dp.py}}: เพิ่ม graceful fallback
+      ที่แทนที่ \texttt{numba.@njit} ด้วย identity decorator
+      เมื่อ numba หรือ LLVM ไม่สามารถ import ได้
+\item \textbf{\texttt{SEA/segmentation.py}}: video paths ถูก wrap ด้วย
+      \texttt{os.path.abspath}, และ \texttt{subprocess.run} ถูก invoke ด้วย
+      \texttt{shlex.split(cmd)} และ \texttt{shell=False} สำหรับ Windows
+\end{itemize}
+
+\subsection{fairseq\_signclip fork}
+ไฟล์หลายรายการได้รับการแก้ไข Windows-path / model-loading:
+\begin{itemize}[leftmargin=1.5em,itemsep=0pt]
+  \item \texttt{mmpt/models/mmfusion.py}
+  \item \texttt{mmpt/processors/dsprocessor.py}
+  \item \texttt{mmpt/processors/dsprocessor\_sign.py}
+  \item \texttt{mmpt/processors/processor.py}
+  \item \texttt{mmpt/tasks/task.py}
+  \item \texttt{scripts\_bsl/extract\_episode\_features.py}
+\end{itemize}
+
+
+% ============================================================
+\section{บทสรุปและขั้นตอนถัดไป}
+% ============================================================
+
+\paragraph{สิ่งที่ทำงานได้บน TSL}
+แม้ SEA ออกแบบและประเมินบน BSL/ASL/DSGS, pipeline ถ่ายโอนไปยัง TSL
+ได้อย่างสะดวกโดยไม่ต้องฝึกใหม่: 80\% ของ cue ที่ match ตกภายใน $\pm 1$\,วินาที
+จาก ground truth ที่จัดตำแหน่งโดยมนุษย์ และ 99\% ภายใน $\pm 3$\,วินาที
+เมื่อใช้ SignCLIP Multilingual บน Gloss text
+stack ที่ใช้ pose (MediaPipe $\to$ Moryossef segmenter $\to$ SignCLIP multilingual)
+เป็น language-agnostic อย่างแท้จริง
+
+\paragraph{สิ่งที่ยังทำงานไม่ได้}
+\begin{itemize}[leftmargin=1.5em]
+  \item SignCLIP ที่ finetune บน ASL ถ่ายโอนได้ \emph{แย่กว่า} baseline multilingual---
+        ผลลัพธ์เชิงลบที่มีประโยชน์
+  \item Overlap rate 88\% เป็น structural: อัลกอริทึมไม่สามารถลบหรือรวม cue ได้
+  \item ตัวเลข F1@0.50 ในบทความ SEA ไม่สามารถเปรียบเทียบโดยตรงเพราะ
+        ground truth TSL มีรายการน้อยกว่า set ที่ทำนาย (119 vs.\ 172)
+\end{itemize}
+
+\paragraph{ขั้นตอนถัดไปที่แนะนำ}
+\begin{enumerate}[leftmargin=1.5em]
+  \item \textbf{TSL-specific finetuning ของ SignCLIP} บน TSL lexicon ขนาดเล็ก
+        (เช่น พจนานุกรม TSL สำหรับโรงเรียน)
+  \item \textbf{การรวม cue} เป็น post-processing pass ของ SEA:
+        เมื่อ output SEA สองรายการที่อยู่ติดกัน map ไปยัง span ที่ทับซ้อน
+        ให้รวมเป็น cue เดียวแทนการ clamp
+  \item \textbf{Implement ภารกิจที่ 2} (Gloss $\to$ Gloss Labeling):
+        ใช้ token-level similarity path ที่มีอยู่และจำกัด DP ให้ทำงาน
+        ภายในขอบเขตเวลาของแต่ละ Gloss sentence
+  \item \textbf{Crop วิดีโอ} ไปที่ครึ่งของผู้แสดงท่าทางก่อน pose estimation
+        เพื่อลดสัญญาณรบกวนและปรับปรุงความเชื่อมั่นของ landmark มือ
+  \item \textbf{ลอง chain SEA บน external aligner} ที่ดีกว่า สะท้อน
+        การรวม SAT$^{+}$+SEA ที่ให้ผล BOBSL สูงสุดของบทความ
+\end{enumerate}
+
+\bigskip\hrule\bigskip
+\noindent\small\textit{บทความอ้างอิง:}
+Z.\ Jiang, Y.\ Jang, L.\ Momeni, G.\ Varol, S.\ Ebling, A.\ Zisserman,
+\emph{Segment, Embed, and Align: A Universal Recipe for Aligning Subtitles
+to Signing}, arXiv:2512.08094, 2025.\\
+\href{https://arxiv.org/abs/2512.08094}{arxiv.org/abs/2512.08094}
+
+\bigskip\noindent\small\textit{เอกสารประกอบใน workspace:}
+\texttt{example\_alignment/README\_TH.md}, \texttt{Progress\_20042026.md},
+\texttt{SEA/README.md}, \texttt{README.md}
+
+\begin{thebibliography}{9}
+\small
+\bibitem{bull2021aligning}
+H.~Bull, T.~Afouras, G.~Varol, S.~Albanie, L.~Momeni, A.~Zisserman.
+\newblock Aligning subtitles in sign language videos.
+\newblock In \emph{ICCV}, 2021.
+
+\bibitem{jang2025deep}
+Y.~Jang, J.~Park, S.~Choi, J.~S.~Chung, A.~Zisserman.
+\newblock Lost in time: A new temporal benchmark for VideoLLMs.
+\newblock In \emph{ICCV}, 2025.
+
+\bibitem{moryossef-etal-2023-linguistically}
+A.~Moryossef, et al.
+\newblock Linguistically motivated sign language segmentation.
+\newblock In \emph{Findings of EMNLP}, 2023.
+
+\bibitem{jiang-etal-2024-signclip}
+Z.~Jiang, A.~Moryossef, M.~M{\"u}ller, S.~Ebling.
+\newblock Sign\,CLIP: Connecting text and sign language by contrastive learning.
+\newblock In \emph{EMNLP}, 2024.
+
+\bibitem{muller-etal-2022-findings}
+M.~M{\"u}ller, et al.
+\newblock Findings of the WMT 2022 shared task on sign language translation.
+\newblock In \emph{WMT}, 2022.
+
+\bibitem{muller-etal-2023-findings}
+M.~M{\"u}ller, et al.
+\newblock Findings of the second WMT shared task on sign language translation.
+\newblock In \emph{WMT}, 2023.
+\end{thebibliography}
+
+\end{document}

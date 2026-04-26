@@ -1,0 +1,112 @@
+\contentsline {part}{I\hspace {1em}Background --- the SEA Paper}{3}{part.1}%
+\contentsline {section}{\numberline {1}Motivation: Why Sign-Language Subtitle Alignment?}{3}{section.1}%
+\contentsline {paragraph}{Parallel data for sign-language translation.}{3}{section.1}%
+\contentsline {paragraph}{Accessibility and post-hoc captioning.}{3}{section.1}%
+\contentsline {paragraph}{Why prior approaches are limited.}{3}{section.1}%
+\contentsline {paragraph}{The SEA proposition.}{3}{section.1}%
+\contentsline {section}{\numberline {2}Formal Task and Three-Stage Pipeline}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Inputs and outputs}{3}{subsection.2.1}%
+\contentsline {paragraph}{Given.}{3}{subsection.2.1}%
+\contentsline {paragraph}{Goal.}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}The three modular stages}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Why this works as a universal recipe}{4}{subsection.2.3}%
+\contentsline {section}{\numberline {3}The Segmentation Model in Detail}{5}{section.3}%
+\contentsline {paragraph}{Why this segmenter rather than newer ones?}{5}{section.3}%
+\contentsline {paragraph}{Implementation detail relevant to this workspace.}{5}{section.3}%
+\contentsline {section}{\numberline {4}The Embedding Model in Detail (SignCLIP)}{5}{section.4}%
+\contentsline {paragraph}{Pretraining (\emph {SignCLIP-multilingual}).}{5}{section.4}%
+\contentsline {paragraph}{Language-specific finetuning.}{5}{section.4}%
+\contentsline {paragraph}{ISLR$\,\leftrightarrow \,$alignment correlation.}{6}{section.4}%
+\contentsline {section}{\numberline {5}The Alignment Algorithm in Detail (Paper Description)}{6}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Cost function}{6}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Locality constraint and softmax normalisation}{6}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Global DP recurrence}{6}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Sub-group refinement}{7}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Pre- and post-DP fixed offsets}{7}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Random parameter search}{7}{subsection.5.6}%
+\contentsline {section}{\numberline {6}Datasets and Baselines (from the Paper)}{7}{section.6}%
+\contentsline {paragraph}{Baselines.}{7}{table.caption.3}%
+\contentsline {paragraph}{Evaluation metric: F1@0.50.}{8}{table.caption.3}%
+\contentsline {paragraph}{Headline result (paper Table 2).}{8}{table.caption.3}%
+\contentsline {paragraph}{Take-away from the paper.}{8}{table.caption.4}%
+\contentsline {paragraph}{Pseudocode (paper Appendix Figure 4).}{8}{table.caption.4}%
+\contentsline {part}{II\hspace {1em}This Workspace --- TSL Pipeline}{10}{part.2}%
+\contentsline {section}{\numberline {7}Project Goals on Thai Sign Language}{10}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Two concrete tasks formulated for TSL}{10}{subsection.7.1}%
+\contentsline {paragraph}{Task~1 (focus of this report).}{10}{subsection.7.1}%
+\contentsline {paragraph}{Task~2 (future work).}{10}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}The single TSL example used throughout}{10}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Pipeline Walkthrough --- Step by Step}{10}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Step 0: Environment}{10}{subsection.8.1}%
+\contentsline {paragraph}{What.}{10}{subsection.8.1}%
+\contentsline {paragraph}{Hardware.}{10}{subsection.8.1}%
+\contentsline {paragraph}{Install (one-time).}{10}{subsection.8.1}%
+\contentsline {paragraph}{Pitfalls actually hit during setup.}{11}{lstnumber.-2.8}%
+\contentsline {paragraph}{Result.}{11}{lstnumber.-2.8}%
+\contentsline {subsection}{\numberline {8.2}Step 1: Extract CC from EAF $\rightarrow $ WebVTT}{11}{subsection.8.2}%
+\contentsline {paragraph}{What.}{11}{subsection.8.2}%
+\contentsline {paragraph}{Code.}{11}{subsection.8.2}%
+\contentsline {paragraph}{Algorithm.}{12}{subsection.8.2}%
+\contentsline {paragraph}{Conversion formula.}{12}{Item.7}%
+\contentsline {paragraph}{Run.}{12}{Item.7}%
+\contentsline {paragraph}{Result (verified).}{12}{lstnumber.-3.1}%
+\contentsline {subsection}{\numberline {8.3}Step 2: Pose Estimation}{12}{subsection.8.3}%
+\contentsline {paragraph}{What.}{12}{subsection.8.3}%
+\contentsline {paragraph}{Run.}{12}{subsection.8.3}%
+\contentsline {paragraph}{Why these settings.}{12}{lstnumber.-5.2}%
+\contentsline {paragraph}{Result (verified).}{12}{lstnumber.-5.2}%
+\contentsline {subsection}{\numberline {8.4}Step 3: Sign Segmentation}{13}{subsection.8.4}%
+\contentsline {paragraph}{What.}{13}{subsection.8.4}%
+\contentsline {paragraph}{Model.}{13}{subsection.8.4}%
+\contentsline {paragraph}{Run.}{13}{subsection.8.4}%
+\contentsline {paragraph}{Algorithmic flow inside \texttt {segmentation.py}.}{13}{lstnumber.-6.7}%
+\contentsline {paragraph}{Workspace patches.}{13}{Item.10}%
+\contentsline {paragraph}{Result (verified).}{13}{lstnumber.-7.4}%
+\contentsline {subsection}{\numberline {8.5}Step 4: Embedding (SignCLIP)}{13}{subsection.8.5}%
+\contentsline {paragraph}{What.}{13}{subsection.8.5}%
+\contentsline {paragraph}{Three checkpoint variants used here.}{13}{subsection.8.5}%
+\contentsline {paragraph}{Run (BSL, signs).}{14}{subsection.8.5}%
+\contentsline {paragraph}{Two modes.}{14}{lstnumber.-8.7}%
+\contentsline {paragraph}{Live (on-the-fly) embedding.}{14}{lstnumber.-8.7}%
+\contentsline {paragraph}{Result (verified).}{14}{lstnumber.-8.7}%
+\contentsline {subsection}{\numberline {8.6}Auxiliary: Building the Gloss-text VTT}{14}{subsection.8.6}%
+\contentsline {paragraph}{Why.}{14}{subsection.8.6}%
+\contentsline {paragraph}{Code.}{14}{subsection.8.6}%
+\contentsline {paragraph}{Algorithm.}{14}{subsection.8.6}%
+\contentsline {paragraph}{Result.}{15}{Item.13}%
+\contentsline {subsection}{\numberline {8.7}Step 5: Alignment via Dynamic Programming}{15}{subsection.8.7}%
+\contentsline {subsubsection}{\numberline {8.7.1}Stage 5.1 --- Pre-shift bias}{15}{subsubsection.8.7.1}%
+\contentsline {subsubsection}{\numberline {8.7.2}Stage 5.2 --- Candidate window}{15}{subsubsection.8.7.2}%
+\contentsline {subsubsection}{\numberline {8.7.3}Stage 5.3 --- Similarity matrix}{15}{subsubsection.8.7.3}%
+\contentsline {paragraph}{Token-level variant (\texttt {--tokenize\_text\_embedding}).}{15}{subsubsection.8.7.3}%
+\contentsline {paragraph}{Other measures.}{16}{subsubsection.8.7.3}%
+\contentsline {subsubsection}{\numberline {8.7.4}Stage 5.4 --- Cost function}{16}{subsubsection.8.7.4}%
+\contentsline {subsubsection}{\numberline {8.7.5}Stage 5.5 --- DP recurrence}{16}{subsubsection.8.7.5}%
+\contentsline {subsubsection}{\numberline {8.7.6}Stage 5.6 --- JIT inner loop}{17}{subsubsection.8.7.6}%
+\contentsline {subsubsection}{\numberline {8.7.7}Stage 5.7 --- Sub-group refinement}{17}{subsubsection.8.7.7}%
+\contentsline {subsubsection}{\numberline {8.7.8}Stage 5.8 --- Post-shift and final write}{17}{subsubsection.8.7.8}%
+\contentsline {subsubsection}{\numberline {8.7.9}Concrete invocation used in this workspace (B2)}{17}{subsubsection.8.7.9}%
+\contentsline {subsection}{\numberline {8.8}Step 6: Post-processing}{17}{subsection.8.8}%
+\contentsline {subsubsection}{\numberline {8.8.1}Removing overlapping cues}{17}{subsubsection.8.8.1}%
+\contentsline {subsubsection}{\numberline {8.8.2}Re-merging the original tiers into the updated EAF}{17}{subsubsection.8.8.2}%
+\contentsline {subsubsection}{\numberline {8.8.3}Adding all experiment outputs as ELAN tiers}{18}{subsubsection.8.8.3}%
+\contentsline {subsubsection}{\numberline {8.8.4}Evaluation script}{18}{subsubsection.8.8.4}%
+\contentsline {part}{III\hspace {1em}Live Experimental Results}{19}{part.3}%
+\contentsline {section}{\numberline {9}Experiments}{19}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Headline numbers (live, re-run during report writing)}{19}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Reading the live results}{19}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Effect of the tuned profile vs.\ the standard profile (B1$\to $B2)}{20}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}Post-processing results (overlap removal)}{20}{subsection.9.4}%
+\contentsline {subsection}{\numberline {9.5}Best-known parameter combination on TSL}{20}{subsection.9.5}%
+\contentsline {subsection}{\numberline {9.6}How these numbers compare to the paper}{21}{subsection.9.6}%
+\contentsline {section}{\numberline {10}Tunable Points across the Whole Pipeline}{21}{section.10}%
+\contentsline {section}{\numberline {11}Code Map}{22}{section.11}%
+\contentsline {section}{\numberline {12}Patches Applied to Upstream}{22}{section.12}%
+\contentsline {subsection}{\numberline {12.1}SEA fork (vs.\ commit \texttt {5aaf27d})}{22}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}fairseq\_signclip fork}{22}{subsection.12.2}%
+\contentsline {section}{\numberline {13}Workspace File Inventory}{23}{section.13}%
+\contentsline {section}{\numberline {14}Conclusions and Next Steps}{23}{section.14}%
+\contentsline {paragraph}{What works on TSL.}{23}{section.14}%
+\contentsline {paragraph}{What does \emph {not} work yet.}{23}{section.14}%
+\contentsline {paragraph}{Suggested next steps.}{24}{section.14}%
+\contentsline {paragraph}{Reproducibility checklist.}{24}{Item.18}%

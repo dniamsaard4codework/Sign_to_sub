@@ -1,0 +1,94 @@
+\xpg@aux {}{thai}
+\contentsline {part}{I\hspace {1em}พื้นฐาน --- บทความ SEA}{3}{part.1}%
+\contentsline {section}{\numberline {1}แรงจูงใจ: ทำไมต้องจัดตำแหน่งคำบรรยายภาษามือ?}{3}{section.1}%
+\contentsline {paragraph}{ข้อมูลคู่ขนานสำหรับการแปลภาษามือ}{3}{section.1}%
+\contentsline {paragraph}{การเข้าถึงและการบรรยายภายหลัง}{3}{section.1}%
+\contentsline {paragraph}{ทำไมแนวทางก่อนหน้าจึงมีข้อจำกัด}{3}{section.1}%
+\contentsline {paragraph}{ข้อเสนอของ SEA}{3}{section.1}%
+\contentsline {section}{\numberline {2}นิยามงานอย่างเป็นทางการและ Pipeline สามขั้นตอน}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Input และ Output}{3}{subsection.2.1}%
+\contentsline {paragraph}{ที่ให้มา}{3}{subsection.2.1}%
+\contentsline {paragraph}{เป้าหมาย}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}สามขั้นตอนแบบ modular}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}ทำไมถึงใช้งานได้เป็น universal recipe}{3}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Model Segmentation อย่างละเอียด}{4}{section.3}%
+\contentsline {paragraph}{ทำไมถึงใช้ segmenter นี้แทนตัวใหม่กว่า?}{4}{section.3}%
+\contentsline {paragraph}{รายละเอียด implementation ที่เกี่ยวข้องกับ workspace นี้}{4}{section.3}%
+\contentsline {section}{\numberline {4}Model Embedding อย่างละเอียด (SignCLIP)}{5}{section.4}%
+\contentsline {paragraph}{Pretraining (\emph {SignCLIP-multilingual})}{5}{section.4}%
+\contentsline {paragraph}{การ Finetune เฉพาะภาษา}{5}{section.4}%
+\contentsline {paragraph}{ความสัมพันธ์ ISLR$\,\leftrightarrow \,$alignment}{5}{section.4}%
+\contentsline {section}{\numberline {5}อัลกอริทึม Alignment อย่างละเอียด (คำอธิบายจากบทความ)}{5}{section.5}%
+\contentsline {subsection}{\numberline {5.1}ฟังก์ชัน Cost}{5}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}ข้อจำกัด Locality และการ Normalize ด้วย Softmax}{5}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}การวนซ้ำ DP แบบ Global}{5}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}การกลั่นกรอง Sub-group}{5}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Offset คงที่ก่อนและหลัง DP}{6}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}การค้นหาพารามิเตอร์แบบสุ่ม}{6}{subsection.5.6}%
+\contentsline {section}{\numberline {6}ชุดข้อมูลและ Baseline (จากบทความ)}{6}{section.6}%
+\contentsline {paragraph}{เมตริกการประเมิน: F1@0.50}{6}{table.caption.3}%
+\contentsline {paragraph}{ผลลัพธ์หลัก (ตารางบทความ 2)}{6}{table.caption.3}%
+\contentsline {paragraph}{Pseudocode (Appendix Figure 4 ของบทความ)}{6}{table.caption.4}%
+\contentsline {part}{II\hspace {1em}Workspace นี้ --- TSL Pipeline}{8}{part.2}%
+\contentsline {section}{\numberline {7}เป้าหมายโครงการบนภาษามือไทย}{8}{section.7}%
+\contentsline {subsection}{\numberline {7.1}สองภารกิจที่กำหนดสำหรับ TSL}{8}{subsection.7.1}%
+\contentsline {paragraph}{ภารกิจที่ 1 (จุดสนใจของรายงานนี้)}{8}{subsection.7.1}%
+\contentsline {paragraph}{ภารกิจที่ 2 (งานในอนาคต)}{8}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}ตัวอย่าง TSL หนึ่งตัวที่ใช้ตลอดรายงาน}{8}{subsection.7.2}%
+\contentsline {section}{\numberline {8}การอธิบาย Pipeline ทีละขั้นตอน}{8}{section.8}%
+\contentsline {subsection}{\numberline {8.1}ขั้นตอนที่ 0: Environment}{8}{subsection.8.1}%
+\contentsline {paragraph}{คืออะไร}{8}{subsection.8.1}%
+\contentsline {paragraph}{Hardware}{8}{subsection.8.1}%
+\contentsline {paragraph}{การติดตั้ง (ครั้งเดียว)}{8}{subsection.8.1}%
+\contentsline {paragraph}{ปัญหาที่พบระหว่างการติดตั้ง}{8}{lstnumber.-2.8}%
+\contentsline {paragraph}{ผลลัพธ์}{9}{lstnumber.-2.8}%
+\contentsline {subsection}{\numberline {8.2}ขั้นตอนที่ 1: Extract CC จาก EAF ไปยัง WebVTT}{9}{subsection.8.2}%
+\contentsline {paragraph}{คืออะไร}{9}{subsection.8.2}%
+\contentsline {paragraph}{โค้ด}{9}{subsection.8.2}%
+\contentsline {paragraph}{อัลกอริทึม}{9}{subsection.8.2}%
+\contentsline {paragraph}{ผลลัพธ์ (ยืนยันแล้ว)}{9}{Item.7}%
+\contentsline {subsection}{\numberline {8.3}ขั้นตอนที่ 2: Pose Estimation}{9}{subsection.8.3}%
+\contentsline {paragraph}{คืออะไร}{9}{subsection.8.3}%
+\contentsline {paragraph}{รัน}{10}{subsection.8.3}%
+\contentsline {paragraph}{ทำไมถึงใช้การตั้งค่านี้}{10}{lstnumber.-3.2}%
+\contentsline {paragraph}{ผลลัพธ์ (ยืนยันแล้ว)}{10}{lstnumber.-3.2}%
+\contentsline {subsection}{\numberline {8.4}ขั้นตอนที่ 3: Sign Segmentation}{10}{subsection.8.4}%
+\contentsline {paragraph}{คืออะไร}{10}{subsection.8.4}%
+\contentsline {paragraph}{Model}{10}{subsection.8.4}%
+\contentsline {paragraph}{รัน}{10}{subsection.8.4}%
+\contentsline {paragraph}{Patch ใน Workspace}{10}{lstnumber.-4.7}%
+\contentsline {paragraph}{ผลลัพธ์ (ยืนยันแล้ว)}{10}{lstnumber.-5.4}%
+\contentsline {subsection}{\numberline {8.5}ขั้นตอนที่ 4: Embedding (SignCLIP)}{10}{subsection.8.5}%
+\contentsline {paragraph}{คืออะไร}{10}{subsection.8.5}%
+\contentsline {paragraph}{สาม checkpoint ที่ใช้ใน workspace}{10}{subsection.8.5}%
+\contentsline {paragraph}{ผลลัพธ์ (ยืนยันแล้ว)}{10}{subsection.8.5}%
+\contentsline {subsection}{\numberline {8.6}เพิ่มเติม: สร้าง Gloss-text VTT}{10}{subsection.8.6}%
+\contentsline {paragraph}{ทำไม}{10}{subsection.8.6}%
+\contentsline {paragraph}{ผลลัพธ์}{10}{subsection.8.6}%
+\contentsline {subsection}{\numberline {8.7}ขั้นตอนที่ 5: Alignment ผ่าน Dynamic Programming}{11}{subsection.8.7}%
+\contentsline {subsubsection}{\numberline {8.7.1}ขั้นตอน 5.1 --- Pre-shift bias}{11}{subsubsection.8.7.1}%
+\contentsline {subsubsection}{\numberline {8.7.2}ขั้นตอน 5.2 --- หน้าต่าง Candidate}{11}{subsubsection.8.7.2}%
+\contentsline {subsubsection}{\numberline {8.7.3}ขั้นตอน 5.3 --- Similarity matrix}{11}{subsubsection.8.7.3}%
+\contentsline {subsubsection}{\numberline {8.7.4}ขั้นตอน 5.4 --- ฟังก์ชัน Cost}{11}{subsubsection.8.7.4}%
+\contentsline {subsubsection}{\numberline {8.7.5}ขั้นตอน 5.5 --- DP Recurrence}{11}{subsubsection.8.7.5}%
+\contentsline {subsubsection}{\numberline {8.7.6}ขั้นตอน 5.6 --- JIT Inner Loop}{11}{subsubsection.8.7.6}%
+\contentsline {subsubsection}{\numberline {8.7.7}Concrete invocation (B2)}{11}{subsubsection.8.7.7}%
+\contentsline {subsection}{\numberline {8.8}ขั้นตอนที่ 6: Post-processing}{12}{subsection.8.8}%
+\contentsline {subsubsection}{\numberline {8.8.1}การลบ cue ที่ทับซ้อน}{12}{subsubsection.8.8.1}%
+\contentsline {subsubsection}{\numberline {8.8.2}การรวม tier ต้นฉบับกลับเข้า EAF ที่อัปเดต}{12}{subsubsection.8.8.2}%
+\contentsline {subsubsection}{\numberline {8.8.3}การเพิ่ม output การทดลองทั้งหมดเป็น ELAN tier}{12}{subsubsection.8.8.3}%
+\contentsline {part}{III\hspace {1em}ผลการทดลองจริง}{13}{part.3}%
+\contentsline {section}{\numberline {9}การทดลอง}{13}{section.9}%
+\contentsline {subsection}{\numberline {9.1}ตัวเลขหลัก (live, รันระหว่างการเขียนรายงาน)}{13}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}การอ่านผลลัพธ์}{13}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}ผลลัพธ์ post-processing (การลบ overlap)}{14}{subsection.9.3}%
+\contentsline {subsection}{\numberline {9.4}ชุดพารามิเตอร์ที่ดีที่สุดบน TSL}{14}{subsection.9.4}%
+\contentsline {section}{\numberline {10}จุดที่ปรับได้ตลอด Pipeline ทั้งหมด}{14}{section.10}%
+\contentsline {section}{\numberline {11}แผนที่โค้ด}{14}{section.11}%
+\contentsline {section}{\numberline {12}Patch ที่ใช้กับ Upstream}{14}{section.12}%
+\contentsline {subsection}{\numberline {12.1}SEA fork (vs.\ commit \texttt {5aaf27d})}{14}{subsection.12.1}%
+\contentsline {subsection}{\numberline {12.2}fairseq\_signclip fork}{14}{subsection.12.2}%
+\contentsline {section}{\numberline {13}บทสรุปและขั้นตอนถัดไป}{15}{section.13}%
+\contentsline {paragraph}{สิ่งที่ทำงานได้บน TSL}{15}{section.13}%
+\contentsline {paragraph}{สิ่งที่ยังทำงานไม่ได้}{15}{section.13}%
+\contentsline {paragraph}{ขั้นตอนถัดไปที่แนะนำ}{15}{section.13}%
