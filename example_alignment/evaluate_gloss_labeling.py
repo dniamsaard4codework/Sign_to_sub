@@ -32,7 +32,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
-DEFAULT_EAF      = HERE / "การเปรียบเทียบและเรียงลำดับ (11.07 นาที).eaf"
+DEFAULT_EAF      = HERE / "Test.eaf"  # อัปเดต 2026-05-04: ใช้ Test.eaf
 DEFAULT_PRED_CSV = HERE / "gloss_labels_pred.csv"
 DEFAULT_OUT_CSV  = HERE / "evaluation_gloss_labeling.csv"
 

@@ -24,7 +24,7 @@ from matplotlib.patches import Rectangle
 
 HERE = Path(__file__).resolve().parent
 
-EAF_PATH    = HERE / "การเปรียบเทียบและเรียงลำดับ (11.07 นาที).eaf"
+EAF_PATH    = HERE / "Test.eaf"  # อัปเดต 2026-05-04: ใช้ Test.eaf
 C_MULTI_VTT = HERE / "aligned_output_multi_gloss" / "04_no_overlap.vtt"
 PRED_CSV    = HERE / "gloss_labels_pred.csv"
 OUT_PNG     = HERE / "figures" / "timeline_first_2min.png"

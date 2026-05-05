@@ -118,6 +118,16 @@ def main() -> None:
                 "w2_pct": round(r["w2"], 2),
                 "w3_pct": round(r["w3"], 2),
                 "overlap_pct": round(r["overlap_pct"], 2),
+                "mean_off_abs":       round(r["mean_off_abs"], 4),
+                "median_off_abs":     round(r["median_off_abs"], 4),
+                "mean_end_off":       round(r["mean_end_off"], 4),
+                "median_end_off":     round(r["median_end_off"], 4),
+                "mean_end_off_abs":   round(r["mean_end_off_abs"], 4),
+                "median_end_off_abs": round(r["median_end_off_abs"], 4),
+                "frame_acc":          round(r["frame_acc"], 4),
+                "f1_10":              round(r["f1_10"], 4),
+                "f1_25":              round(r["f1_25"], 4),
+                "f1_50":              round(r["f1_50"], 4),
             })
     print()
 
@@ -158,7 +168,11 @@ def main() -> None:
         "experiment", "vtt_path", "post_overlap",
         "matched", "total_pred",
         "mean_off_s", "median_off_s", "stdev_s",
+        "mean_off_abs", "median_off_abs",
+        "mean_end_off", "median_end_off",
+        "mean_end_off_abs", "median_end_off_abs",
         "w1_pct", "w2_pct", "w3_pct", "overlap_pct",
+        "frame_acc", "f1_10", "f1_25", "f1_50",
     ]
     with open(OUT_CSV, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)

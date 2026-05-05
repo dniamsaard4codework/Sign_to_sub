@@ -48,7 +48,7 @@ sys.path.insert(0, str(ROOT / "SEA"))
 sys.path.insert(0, str(ROOT / "fairseq_signclip" / "examples" / "MMPT" / "scripts_bsl"))
 
 # Defaults
-DEFAULT_EAF       = HERE / "การเปรียบเทียบและเรียงลำดับ (11.07 นาที).eaf"
+DEFAULT_EAF       = HERE / "Test.eaf"  # อัปเดต 2026-05-04: ใช้ Test.eaf (มี Gloss_Input tier)
 DEFAULT_SEG_EAF   = HERE / "segmentation_output" / "E4s-1_30_50" / "04.eaf"
 DEFAULT_SIGN_EMB  = HERE / "segmentation_embedding" / "sign_clip_multi" / "04.npy"
 DEFAULT_OUT_CSV   = HERE / "gloss_labels_pred.csv"
@@ -59,7 +59,7 @@ DEFAULT_CACHE     = HERE / "subtitle_embedding" / "sign_clip_multi_gloss_tokens"
 
 # ── Gloss tier reader (Thai-aware) ───────────────────────────────────────────
 
-def load_gloss_sentences(eaf_path: Path, tier_id: str = "Gloss") -> list[dict]:
+def load_gloss_sentences(eaf_path: Path, tier_id: str = "Gloss_Input") -> list[dict]:
     tree = ET.parse(eaf_path)
     root = tree.getroot()
 

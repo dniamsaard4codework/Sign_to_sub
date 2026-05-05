@@ -1,14 +1,16 @@
 # make_gloss_cc_vtt.py
 """
 สร้าง VTT ที่มี:
-  - timestamp จาก CC (speech time) — เพื่อให้ SEA ยังต้อง align เอง
-  - text จาก Gloss tier — เพื่อให้ embedding ตรงกับมือมากขึ้น
-สำหรับ CC entry ที่ไม่ overlap กับ Gloss ใดเลย ให้ใช้ CC text ต้นฉบับแทน
+  - timestamp จาก CC_Input (speech time) — เพื่อให้ SEA ยังต้อง align เอง
+  - text จาก Gloss_Input tier — เพื่อให้ embedding ตรงกับมือมากขึ้น
+สำหรับ CC_Input entry ที่ไม่ overlap กับ Gloss_Input ใดเลย ให้ใช้ CC_Input text ต้นฉบับแทน
+
+อัปเดต 2026-05-04: ใช้ Test.eaf + CC_Input (119 cues) + Gloss_Input tier
 """
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-SOURCE_EAF = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\การเปรียบเทียบและเรียงลำดับ (11.07 นาที).eaf")
+SOURCE_EAF = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\Test.eaf")
 CC_VTT     = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\subtitles\04.vtt")
 OUT_VTT    = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\subtitles_gloss_cc_time\04.vtt")
 
@@ -38,7 +40,7 @@ def main():
     }
     gloss_entries = []
     for tier in root.findall("TIER"):
-        if tier.get("TIER_ID") == "Gloss":
+        if tier.get("TIER_ID") == "Gloss_Input":
             for ann in tier.findall(".//ALIGNABLE_ANNOTATION"):
                 t1 = ts_map.get(ann.get("TIME_SLOT_REF1", ""), 0)
                 t2 = ts_map.get(ann.get("TIME_SLOT_REF2", ""), 0)

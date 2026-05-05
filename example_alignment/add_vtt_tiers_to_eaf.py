@@ -22,9 +22,10 @@ import argparse
 from pathlib import Path
 
 BASE = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment")
-# Base for comparison: original EAF (has CC, CC_Aligned, Gloss, Gloss Labeling)
-SOURCE_EAF  = BASE / "การเปรียบเทียบและเรียงลำดับ (11.07 นาที).eaf"
-TARGET_EAF  = BASE / "การเปรียบเทียบและเรียงลำดับ (11.07 นาที)_comparison.eaf"
+# Base for comparison: Test.eaf (has CC, CC_Input, CC_Aligned, Gloss, Gloss_Input, Gloss Labeling)
+# อัปเดต 2026-05-04: ใช้ Test.eaf เป็น source แทน การเปรียบเทียบฯ.eaf
+SOURCE_EAF  = BASE / "Test.eaf"
+TARGET_EAF  = BASE / "Test_comparison.eaf"
 
 # (tier_id_in_eaf, vtt_path)  — ลำดับจะแสดงในไทม์ไลน์ ELAN ตามนี้
 # Layer 1: pre-overlap-fix experiment outputs

@@ -5,19 +5,16 @@
         <Object class="java.awt.Dimension">2560,1392</Object>
     </pref>
     <pref key="LayoutManager.SelectedTabIndex">
-        <Int>2</Int>
+        <Int>7</Int>
     </pref>
     <pref key="LayoutManager.VisibleMultiTierViewer">
         <String>mpi.eudico.client.annotator.viewer.TimeLineViewer</String>
     </pref>
-    <pref key="LayoutManager.ControlPanelWidth">
-        <Int>166</Int>
-    </pref>
     <pref key="MultiTierViewer.ActiveTierName">
-        <String>Gloss Labeling</String>
+        <String>CC_Input</String>
     </pref>
     <pref key="SelectionEndTime">
-        <Long>31890</Long>
+        <Long>579780</Long>
     </pref>
     <pref key="LayoutManager.CurrentMode">
         <Int>1</Int>
@@ -61,7 +58,13 @@
         <pref key="Gloss">
             <Object class="java.awt.Font">Angsana New,0,1</Object>
         </pref>
+        <pref key="Gloss_Input">
+            <Object class="java.awt.Font">Angsana New,0,1</Object>
+        </pref>
         <pref key="CC_Aligned">
+            <Object class="java.awt.Font">Angsana New,0,1</Object>
+        </pref>
+        <pref key="CC_Input">
             <Object class="java.awt.Font">Angsana New,0,1</Object>
         </pref>
         <pref key="Gloss Labeling">
@@ -87,8 +90,9 @@
         <Object class="java.awt.Point">0,0</Object>
     </pref>
     <pref key="SelectionBeginTime">
-        <Long>40</Long>
+        <Long>576470</Long>
     </pref>
+    <prefList key="MultiTierViewer.HiddenTiers"/>
     <prefGroup key="BAS - WebMAUS Basic">
         <pref key="LANGUAGE">
             <String>deu-DE</String>
@@ -105,10 +109,10 @@
         </pref>
     </prefGroup>
     <pref key="TimeScaleBeginTime">
-        <Long>29400</Long>
+        <Long>566110</Long>
     </pref>
     <pref key="MediaTime">
-        <Long>34180</Long>
+        <Long>571030</Long>
     </pref>
     <prefGroup key="TierColors">
         <pref key="CC">
@@ -117,7 +121,13 @@
         <pref key="Gloss">
             <Object class="java.awt.Color">0,160,90</Object>
         </pref>
+        <pref key="Gloss_Input">
+            <Object class="java.awt.Color">0,160,90</Object>
+        </pref>
         <pref key="CC_Aligned">
+            <Object class="java.awt.Color">0,160,90</Object>
+        </pref>
+        <pref key="CC_Input">
             <Object class="java.awt.Color">0,160,90</Object>
         </pref>
         <pref key="Gloss Labeling">
@@ -129,6 +139,8 @@
         <String>CC_Aligned</String>
         <String>Gloss</String>
         <String>Gloss Labeling</String>
+        <String>CC_Input</String>
+        <String>Gloss_Input</String>
     </prefList>
     <prefGroup key="TierHighlightColors"/>
     <pref key="LayoutManager.SplitPaneDividerLocation">
