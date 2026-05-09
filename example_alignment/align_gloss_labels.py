@@ -348,6 +348,8 @@ def inject_eaf_tier(
 def main() -> None:
     p = argparse.ArgumentParser(description="Task 2 prototype: per-Gloss-sentence token-level alignment.")
     p.add_argument("--eaf",          type=Path, default=DEFAULT_EAF)
+    p.add_argument("--tier",         default="Gloss_Input",
+                   help="Source tier in --eaf to read sentences from (e.g., Gloss or Gloss_Input).")
     p.add_argument("--seg-eaf",      type=Path, default=DEFAULT_SEG_EAF)
     p.add_argument("--sign-emb",     type=Path, default=DEFAULT_SIGN_EMB)
     p.add_argument("--out-csv",      type=Path, default=DEFAULT_OUT_CSV)
@@ -364,8 +366,8 @@ def main() -> None:
                    help="If >0, merge consecutive SIGN segments separated by less than this many ms")
     args = p.parse_args()
 
-    print(f"Loading Gloss sentences from {args.eaf.name} ...")
-    sentences = load_gloss_sentences(args.eaf)
+    print(f"Loading Gloss sentences from {args.eaf.name} (tier='{args.tier}') ...")
+    sentences = load_gloss_sentences(args.eaf, tier_id=args.tier)
     n_tokens = sum(len(s["tokens"]) for s in sentences)
     print(f"  {len(sentences)} sentences, {n_tokens} total tokens")
 
