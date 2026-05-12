@@ -31,6 +31,9 @@ TARGET_EAF  = BASE / "Test_comparison.eaf"
 # Layer 1: pre-overlap-fix experiment outputs
 # Layer 2: post-overlap-fix variants (NEW — added 2026-04-26)
 # Layer 3: Task 2 Gloss Labeling prediction (NEW — added 2026-04-26)
+# Layer 4: Task 2 ablation outputs (NEW — added 2026-05-12)
+ABLATION = BASE / "ablation"
+
 VTT_TIERS = [
     # ── Layer 1: pre-overlap experiment outputs ────────────────────────────
     ("SUBTITLE_B2",                     BASE / "aligned_output_with_embedding_tuned" / "04.vtt"),
@@ -48,8 +51,13 @@ VTT_TIERS = [
     ("SUBTITLE_D_ASL_no_overlap",       BASE / "aligned_output_asl_b2"               / "04_no_overlap.vtt"),
     ("SUBTITLE_D_ASL_gloss_no_overlap", BASE / "aligned_output_asl_gloss"            / "04_no_overlap.vtt"),
     ("SUBTITLE_D_ASL_word_no_overlap",  BASE / "aligned_output_asl_gloss_word"       / "04_no_overlap.vtt"),
-    # ── Layer 3: Task 2 Gloss Labeling prediction ──────────────────────────
+    # ── Layer 3: Task 2 Gloss Labeling prediction (default = Gloss_Input) ──
     ("GLOSS_LABEL_PRED",                BASE / "gloss_labels_pred.vtt"),
+    # ── Layer 4: Task 2 ablation tiers (added 2026-05-12) ──────────────────
+    # Auto-skipped if files don't exist — run align_gloss_labels.py with each
+    # --tier to generate them. See Progress_09052026.md §3 for commands.
+    ("GLOSS_LABEL_PRED__Gloss",         ABLATION / "gloss_labels_pred__Gloss.vtt"),
+    ("GLOSS_LABEL_PRED__Gloss_Input",   ABLATION / "gloss_labels_pred__Gloss_Input.vtt"),
 ]
 
 

@@ -56,67 +56,73 @@
     </prefGroup>
     <prefGroup key="TierFonts">
         <pref key="CC">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_C_MULTI">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_D_ASL_no_overlap">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
+        </pref>
+        <pref key="GLOSS_LABEL_PRED__Gloss">
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_B2_no_overlap">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_D_ASL_gloss">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="Gloss_Input">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_B2">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_C_MULTI_word_no_overlap">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="CC_Aligned">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_D_ASL">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="CC_Input">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_C_MULTI_no_overlap">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="Gloss Labeling">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_D_ASL_word_no_overlap">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="Gloss">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
+        </pref>
+        <pref key="GLOSS_LABEL_PRED__Gloss_Input">
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="GLOSS_LABEL_PRED">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_B_MULTI_no_overlap">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_D_ASL_gloss_no_overlap">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_B_MULTI">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_C_MULTI_word">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
         <pref key="SUBTITLE_D_ASL_word">
-            <Object class="java.awt.Font">Angsana New,0,1</Object>
+            <Object class="java.awt.Font">Angsana New Bold,0,1</Object>
         </pref>
     </prefGroup>
     <prefList key="CommentViewer.Columns.Order">
@@ -156,7 +162,7 @@
         </pref>
     </prefGroup>
     <pref key="TimeScaleBeginTime">
-        <Long>58590</Long>
+        <Long>36070</Long>
     </pref>
     <pref key="MediaTime">
         <Long>39830</Long>
@@ -169,6 +175,9 @@
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
         <pref key="SUBTITLE_D_ASL_no_overlap">
+            <Object class="java.awt.Color">90,0,160</Object>
+        </pref>
+        <pref key="GLOSS_LABEL_PRED__Gloss">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
         <pref key="SUBTITLE_B2_no_overlap">
@@ -186,10 +195,10 @@
         <pref key="SUBTITLE_C_MULTI_word_no_overlap">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
-        <pref key="SUBTITLE_D_ASL">
+        <pref key="CC_Aligned">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
-        <pref key="CC_Aligned">
+        <pref key="SUBTITLE_D_ASL">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
         <pref key="CC_Input">
@@ -207,13 +216,16 @@
         <pref key="Gloss">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
+        <pref key="GLOSS_LABEL_PRED__Gloss_Input">
+            <Object class="java.awt.Color">90,0,160</Object>
+        </pref>
         <pref key="GLOSS_LABEL_PRED">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
-        <pref key="SUBTITLE_D_ASL_gloss_no_overlap">
+        <pref key="SUBTITLE_B_MULTI_no_overlap">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
-        <pref key="SUBTITLE_B_MULTI_no_overlap">
+        <pref key="SUBTITLE_D_ASL_gloss_no_overlap">
             <Object class="java.awt.Color">90,0,160</Object>
         </pref>
         <pref key="SUBTITLE_B_MULTI">
@@ -248,6 +260,8 @@
         <String>SUBTITLE_D_ASL_gloss_no_overlap</String>
         <String>SUBTITLE_D_ASL_word_no_overlap</String>
         <String>GLOSS_LABEL_PRED</String>
+        <String>GLOSS_LABEL_PRED__Gloss</String>
+        <String>GLOSS_LABEL_PRED__Gloss_Input</String>
     </prefList>
     <prefGroup key="TierHighlightColors"/>
     <pref key="LayoutManager.SplitPaneDividerLocation">

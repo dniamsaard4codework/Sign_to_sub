@@ -6,7 +6,11 @@ Build a comparison EAF with only the BEST-CASE tiers for Task 1 and Task 2.
   Task 1 best : C_MULTI (Multilingual + Gloss text)
                 - SUBTITLE_C_MULTI            <- aligned_output_multi_gloss/04.vtt
                 - SUBTITLE_C_MULTI_no_overlap <- aligned_output_multi_gloss/04_no_overlap.vtt
-  Task 2      : GLOSS_LABEL_PRED              <- gloss_labels_pred.vtt
+  Task 2 best : --tier Gloss  (ablation-confirmed best — Progress_09052026.md)
+                - GLOSS_LABEL_PRED__Gloss     <- ablation/gloss_labels_pred__Gloss.vtt
+                  (Mean IoU 0.49 vs 0.42 of Gloss_Input)
+                If ablation file missing, falls back to default gloss_labels_pred.vtt
+                as GLOSS_LABEL_PRED.
 
 Source : Test.eaf  (CC, CC_Input, CC_Aligned, Gloss, Gloss_Input, Gloss Labeling)
 Output : Test_best.eaf
@@ -29,13 +33,24 @@ from add_vtt_tiers_to_eaf import (
 )
 
 BASE = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment")
+ABLATION = BASE / "ablation"
 SOURCE_EAF = BASE / "Test.eaf"
 TARGET_EAF = BASE / "Test_best.eaf"
+
+# Prefer the ablation-confirmed Task 2 best (--tier Gloss) when available.
+# Falls back to the default gloss_labels_pred.vtt (Gloss_Input) if missing.
+ABLATION_BEST_TASK2 = ABLATION / "gloss_labels_pred__Gloss.vtt"
+DEFAULT_TASK2       = BASE / "gloss_labels_pred.vtt"
+
+if ABLATION_BEST_TASK2.exists():
+    TASK2_TIER = ("GLOSS_LABEL_PRED__Gloss", ABLATION_BEST_TASK2)
+else:
+    TASK2_TIER = ("GLOSS_LABEL_PRED", DEFAULT_TASK2)
 
 VTT_TIERS = [
     ("SUBTITLE_C_MULTI",            BASE / "aligned_output_multi_gloss" / "04.vtt"),
     ("SUBTITLE_C_MULTI_no_overlap", BASE / "aligned_output_multi_gloss" / "04_no_overlap.vtt"),
-    ("GLOSS_LABEL_PRED",            BASE / "gloss_labels_pred.vtt"),
+    TASK2_TIER,
 ]
 
 
@@ -93,7 +108,7 @@ def main() -> None:
     print("     ELAN tiers in this file:")
     print("       Original  : CC, CC_Input, CC_Aligned, Gloss, Gloss_Input, Gloss Labeling")
     print("       Task 1    : SUBTITLE_C_MULTI, SUBTITLE_C_MULTI_no_overlap")
-    print("       Task 2    : GLOSS_LABEL_PRED")
+    print(f"       Task 2    : {TASK2_TIER[0]}  (<- {TASK2_TIER[1].name})")
 
 
 if __name__ == "__main__":

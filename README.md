@@ -237,8 +237,8 @@ Sign_to_sub/
 │       ├── evaluation_gloss_labeling__{Gloss,Gloss_Input}.csv
 │       └── diagnostics.json
 │
-├── Test_comparison.eaf                     ← All 15 tiers (built by add_vtt_tiers_to_eaf.py)
-├── Test_best.eaf                           ← Best-only EAF (built by add_best_to_eaf.py)
+├── Test_comparison.eaf                     ← All 17 tiers — 7 pre + 7 post + 1 default Task 2 + 2 ablation
+├── Test_best.eaf                           ← Best-only — C_MULTI Task 1 + Gloss-tier ablation Task 2
 │
 ├── Progress_*.md                           ← 4 progress reports (Thai)
 ├── README.md                               ← This file
@@ -885,7 +885,7 @@ python example_alignment\evaluate_gloss_labeling.py `
 
 ## Build Comparison & Visualization Outputs
 
-### Test_comparison.eaf (15 experiment tiers + originals)
+### Test_comparison.eaf (17 experiment tiers + originals)
 
 ```powershell
 python example_alignment\add_vtt_tiers_to_eaf.py --overwrite
@@ -896,7 +896,12 @@ Output: `example_alignment/Test_comparison.eaf` — เปิดใน ELAN ด�
 - Original tiers (จาก `Test.eaf`): CC, CC_Input, CC_Aligned, Gloss, Gloss_Input, Gloss Labeling
 - 7 pre-overlap experiment tiers: SUBTITLE_B2, SUBTITLE_B_MULTI, ...
 - 7 post-overlap variants: ..._no_overlap
-- Task 2 prediction: GLOSS_LABEL_PRED
+- Task 2 default prediction: GLOSS_LABEL_PRED (uses `Gloss_Input`, 889 cues)
+- **Task 2 ablation tiers (added 2026-05-12):**
+  - GLOSS_LABEL_PRED__Gloss (852 cues, `--tier Gloss` ablation)
+  - GLOSS_LABEL_PRED__Gloss_Input (889 cues, `--tier Gloss_Input` ablation)
+  > Ablation tiers auto-skipped if `ablation/gloss_labels_pred__*.vtt` ไม่มี
+  > — run ablation commands ก่อน (ดู [Ablation Study section](#how-to-reproduce-the-ablation))
 
 ### Test_best.eaf (best-only EAF)
 
@@ -908,7 +913,10 @@ Output: `example_alignment/Test_best.eaf` — minimal EAF ที่มีแค�
 
 - Original tiers
 - SUBTITLE_C_MULTI + SUBTITLE_C_MULTI_no_overlap (Task 1 best)
-- GLOSS_LABEL_PRED (Task 2)
+- **GLOSS_LABEL_PRED__Gloss** (Task 2 best — `--tier Gloss` ablation, Mean IoU 0.49)
+  > **Auto-fallback:** ถ้า `ablation/gloss_labels_pred__Gloss.vtt` ไม่มี →
+  > ใช้ default `gloss_labels_pred.vtt` (Gloss_Input, Mean IoU 0.42) แทน
+  > เป็น tier `GLOSS_LABEL_PRED`
 
 ### Timeline visualization
 
