@@ -58,6 +58,10 @@ VTT_TIERS = [
     # --tier to generate them. See Progress_09052026.md §3 for commands.
     ("GLOSS_LABEL_PRED__Gloss",         ABLATION / "gloss_labels_pred__Gloss.vtt"),
     ("GLOSS_LABEL_PRED__Gloss_Input",   ABLATION / "gloss_labels_pred__Gloss_Input.vtt"),
+    # ── Layer 5: Task 2 per-sentence pipeline (added 2026-05-17) ───────────
+    # Auto-skipped if file missing — run run_task2_per_sentence.py to generate.
+    # See Progress_16052026.md.
+    ("GLOSS_LABEL_PRED__per_sentence",  BASE / "ablation_per_sentence" / "gloss_labels_pred__per_sentence.vtt"),
 ]
 
 

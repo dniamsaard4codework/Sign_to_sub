@@ -2,7 +2,7 @@
 <preferences version="1.1"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.mpi.nl/tools/elan/Prefs_v1.1.xsd">
     <pref key="FrameSize">
-        <Object class="java.awt.Dimension">2560,1392</Object>
+        <Object class="java.awt.Dimension">2575,1407</Object>
     </pref>
     <pref key="LayoutManager.SelectedTabIndex">
         <Int>7</Int>
@@ -11,7 +11,7 @@
         <String>mpi.eudico.client.annotator.viewer.TimeLineViewer</String>
     </pref>
     <pref key="LayoutManager.ControlPanelWidth">
-        <Int>451</Int>
+        <Int>358</Int>
     </pref>
     <pref key="MultiTierViewer.ActiveTierName">
         <String>default</String>
@@ -70,7 +70,7 @@
         <String>BAS - WebMAUS Basic</String>
     </pref>
     <pref key="FrameLocation">
-        <Object class="java.awt.Point">0,0</Object>
+        <Object class="java.awt.Point">-7,-7</Object>
     </pref>
     <pref key="SelectionBeginTime">
         <Long>0</Long>
@@ -91,23 +91,23 @@
         </pref>
     </prefGroup>
     <pref key="TimeScaleBeginTime">
-        <Long>45000</Long>
+        <Long>33300</Long>
     </pref>
     <pref key="MediaTime">
         <Long>0</Long>
     </pref>
     <prefGroup key="TierColors">
         <pref key="default">
-            <Object class="java.awt.Color">90,90,160</Object>
+            <Object class="java.awt.Color">0,160,160</Object>
         </pref>
         <pref key="GLOSS_LABEL_PRED">
-            <Object class="java.awt.Color">160,160,0</Object>
+            <Object class="java.awt.Color">90,160,160</Object>
         </pref>
         <pref key="SENTENCE">
-            <Object class="java.awt.Color">0,160,90</Object>
+            <Object class="java.awt.Color">0,90,160</Object>
         </pref>
         <pref key="SIGN">
-            <Object class="java.awt.Color">90,0,160</Object>
+            <Object class="java.awt.Color">0,90,90</Object>
         </pref>
     </prefGroup>
     <prefList key="MultiTierViewer.TierOrder">

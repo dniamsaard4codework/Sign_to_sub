@@ -275,6 +275,86 @@ def monotonic_token_dp(
     return ranges
 
 
+# ── Per-sentence alignment (DP + fallback) ──────────────────────────────────
+
+def align_one_sentence(
+    sent: dict,
+    s_idx: int,
+    sent_token_embs: np.ndarray,
+    seg_starts_arr: np.ndarray,
+    seg_ends_arr: np.ndarray,
+    seg_mids_arr: np.ndarray,
+    sign_embs: np.ndarray,
+    gap_penalty: float,
+    coverage_penalty: float,
+    window_pad: float,
+) -> tuple[list[dict], bool]:
+    """Align tokens of one Gloss sentence to a SIGN-segment pool.
+
+    Returns (predictions, fallback_used). Predictions carry the sentence's
+    own time frame (start/end seconds from whatever frame `sent` and the
+    seg arrays share — original video time, or per-clip relative time).
+    """
+    T = len(sent["tokens"])
+    s, e = sent["start"], sent["end"]
+
+    cand_mask = (seg_mids_arr >= s) & (seg_mids_arr <= e)
+    if cand_mask.sum() < T:
+        cand_mask = (seg_mids_arr >= s - window_pad) & (seg_mids_arr <= e + window_pad)
+    cand_idx = np.where(cand_mask)[0]
+    K = len(cand_idx)
+
+    ranges: list[tuple[int, int]] = []
+    sim = None
+    if K >= T and K > 0:
+        cand_sign_embs = sign_embs[cand_idx]
+        tn = sent_token_embs / (np.linalg.norm(sent_token_embs, axis=1, keepdims=True) + 1e-12)
+        cn = cand_sign_embs  / (np.linalg.norm(cand_sign_embs,  axis=1, keepdims=True) + 1e-12)
+        sim = tn @ cn.T  # (T, K)
+        sim = sim - sim.max(axis=1, keepdims=True)
+        sim = np.exp(sim) / (np.exp(sim).sum(axis=1, keepdims=True) + 1e-12)
+
+        ranges = monotonic_token_dp(
+            sim,
+            seg_starts_arr[cand_idx],
+            seg_ends_arr[cand_idx],
+            sentence_dur=e - s,
+            gap_penalty=gap_penalty,
+            coverage_penalty=coverage_penalty,
+        )
+
+    predictions: list[dict] = []
+    if not ranges:
+        step = (e - s) / max(T, 1)
+        for t_idx, tok in enumerate(sent["tokens"]):
+            ts = s + t_idx * step
+            te = s + (t_idx + 1) * step
+            predictions.append({
+                "start": ts,
+                "end":   te,
+                "token": tok,
+                "sentence_idx": s_idx,
+                "token_idx":    t_idx,
+                "score": float("nan"),
+                "fallback": "uniform",
+            })
+        return predictions, True
+
+    for t_idx, ((k0, k1), tok) in enumerate(zip(ranges, sent["tokens"])):
+        gi0, gi1 = cand_idx[k0], cand_idx[k1]
+        tok_score = float(np.sum(sim[t_idx, k0:k1 + 1]))
+        predictions.append({
+            "start": float(seg_starts_arr[gi0]),
+            "end":   float(seg_ends_arr[gi1]),
+            "token": tok,
+            "sentence_idx": s_idx,
+            "token_idx":    t_idx,
+            "score": tok_score,
+            "fallback": "",
+        })
+    return predictions, False
+
+
 # ── EAF / VTT writers ────────────────────────────────────────────────────────
 
 def seconds_to_vtt(s: float) -> str:
@@ -417,66 +497,22 @@ def main() -> None:
 
     for s_idx, sent in enumerate(sentences):
         T = len(sent["tokens"])
-        s, e = sent["start"], sent["end"]
-
-        cand_mask = (seg_mids_arr >= s) & (seg_mids_arr <= e)
-        if cand_mask.sum() < T:
-            cand_mask = (seg_mids_arr >= s - args.window_pad) & (seg_mids_arr <= e + args.window_pad)
-        cand_idx = np.where(cand_mask)[0]
-        K = len(cand_idx)
-
         sent_token_embs = token_embs[flat_idx:flat_idx + T]
-
-        if K >= T and K > 0:
-            cand_sign_embs = sign_embs[cand_idx]
-            # Cosine
-            tn = sent_token_embs / (np.linalg.norm(sent_token_embs, axis=1, keepdims=True) + 1e-12)
-            cn = cand_sign_embs  / (np.linalg.norm(cand_sign_embs,  axis=1, keepdims=True) + 1e-12)
-            sim = tn @ cn.T  # (T, K)
-            # Row-softmax with mild temperature for numerical stability
-            sim = sim - sim.max(axis=1, keepdims=True)
-            sim = np.exp(sim) / (np.exp(sim).sum(axis=1, keepdims=True) + 1e-12)
-
-            ranges = monotonic_token_dp(
-                sim,
-                seg_starts_arr[cand_idx],
-                seg_ends_arr[cand_idx],
-                sentence_dur=e - s,
-                gap_penalty=args.gap_penalty,
-                coverage_penalty=args.coverage_penalty,
-            )
-        else:
-            ranges = []
-
-        if not ranges:
-            # Fallback: split [s, e] uniformly across T tokens
+        sent_preds, used_fallback = align_one_sentence(
+            sent=sent,
+            s_idx=s_idx,
+            sent_token_embs=sent_token_embs,
+            seg_starts_arr=seg_starts_arr,
+            seg_ends_arr=seg_ends_arr,
+            seg_mids_arr=seg_mids_arr,
+            sign_embs=sign_embs,
+            gap_penalty=args.gap_penalty,
+            coverage_penalty=args.coverage_penalty,
+            window_pad=args.window_pad,
+        )
+        predictions.extend(sent_preds)
+        if used_fallback:
             fallback_count += 1
-            step = (e - s) / max(T, 1)
-            for t_idx, tok in enumerate(sent["tokens"]):
-                ts = s + t_idx * step
-                te = s + (t_idx + 1) * step
-                predictions.append({
-                    "start": ts,
-                    "end":   te,
-                    "token": tok,
-                    "sentence_idx": s_idx,
-                    "token_idx":    t_idx,
-                    "score": float("nan"),
-                    "fallback": "uniform",
-                })
-        else:
-            for t_idx, ((k0, k1), tok) in enumerate(zip(ranges, sent["tokens"])):
-                gi0, gi1 = cand_idx[k0], cand_idx[k1]
-                tok_score = float(np.sum(sim[t_idx, k0:k1 + 1]))
-                predictions.append({
-                    "start": float(seg_starts_arr[gi0]),
-                    "end":   float(seg_ends_arr[gi1]),
-                    "token": tok,
-                    "sentence_idx": s_idx,
-                    "token_idx":    t_idx,
-                    "score": tok_score,
-                    "fallback": "",
-                })
 
         flat_idx += T
         n_processed += 1

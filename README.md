@@ -39,6 +39,7 @@
 | [Progress_26042026.md](Progress_26042026.md) | 26 เม.ย. 2569 | 7 experiments + post-overlap fix + Task 2 prototype |
 | [Progress_04052026.md](Progress_04052026.md) | 4 พ.ค. 2569 | เปลี่ยนเป็น `CC_Input` / `Gloss_Input` curated input + index-based eval |
 | [Progress_09052026.md](Progress_09052026.md) | 9 พ.ค. 2569 | **Task 2 ablation: `Gloss` vs `Gloss_Input`** |
+| [Progress_16052026.md](Progress_16052026.md) | 16 พ.ค. 2569 | **Task 2 per-sentence pipeline** — crop video ตาม Gloss sentence boundary แล้วรัน pose+seg+emb+DP ทีละ clip |
 
 ### Task 1 — Subtitle Alignment (current best run)
 
@@ -63,14 +64,20 @@
 
 **Recommended input: `--tier Gloss`** (ดู [Ablation Study](#ablation-study-task-2-gloss-vs-gloss_input))
 
-| Metric | Tier `Gloss` (recommended) | Tier `Gloss_Input` (default in code) |
-| --- | --- | --- |
-| Predictions | 852 | 889 |
-| Mean IoU | **0.4901** | 0.4199 |
-| % IoU ≥ 0.5 | **48.4 %** | 38.9 % |
-| % IoU ≥ 0.3 | **77.0 %** | 66.0 % |
-| % any temporal overlap | **97.5 %** | 93.4 % |
-| Fallback uniform sentences | 0 / 119 | 0 / 119 |
+| Metric | Tier `Gloss` (recommended) | Tier `Gloss_Input` (default in code) | Per-sentence pipeline (16052026) |
+| --- | --- | --- | --- |
+| Predictions | 852 | 889 | 852 |
+| Mean IoU | **0.4901** | 0.4199 | 0.4763 |
+| % IoU ≥ 0.5 | **48.4 %** | 38.9 % | 46.0 % |
+| % IoU ≥ 0.3 | **77.0 %** | 66.0 % | 76.9 % |
+| % any temporal overlap | **97.5 %** | 93.4 % | 96.1 % |
+| Fallback uniform sentences | 0 / 119 | 0 / 119 | 0 / 119 |
+
+> **Per-sentence pipeline (Progress_16052026):** crop วิดีโอเป็น 119 ไฟล์
+> ที่ Gloss sentence boundary แล้วรัน pose + SEA segmentation + SignCLIP
+> + DP ทีละ clip → aggregate กลับเป็น CSV/VTT/EAF. ผลลัพธ์ใกล้เคียง
+> whole-video `Gloss` baseline (−1.4 pp Mean IoU) แต่ runtime ช้ากว่า ~7×
+> — ดูรายละเอียดที่ [Progress_16052026.md](Progress_16052026.md)
 
 > ⚠️ **Caveat:** ตัวเลข exact-text-match ของ `Gloss` (65 %) มี structural
 > leakage เพราะ GT `Gloss Labeling` ถูก build จาก `Gloss` token list —
