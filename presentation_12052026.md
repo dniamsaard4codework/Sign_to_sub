@@ -13,7 +13,8 @@
 
 | Part | Section | นำไปทำ slides? |
 | :---: | --- | :---: |
-| **1** | Task 1 — Pipeline Recap (DP + Overlap) | ✅ ใช่ |
+| **0** | Project Overview — Context, Input Data, S/E Steps | ✅ ใช่ |
+| **1** | Task 1 — Pipeline Recap (DP + Overlap) + Experiments | ✅ ใช่ |
 | **2** | Task 2 — สิ่งที่เพิ่มจาก Task 1 | ✅ ใช่ |
 | **3** | ผลการทดลอง — Gloss vs Gloss_Input | ✅ ใช่ |
 | 4 | What's Next — สิ่งที่ควรเพิ่มในรอบหน้า | ❌ ไม่ — สำหรับ progress doc |
@@ -22,10 +23,18 @@
 
 ## สารบัญ
 
+0. [PART 0 — Project Overview & Pipeline Foundations](#part-0--project-overview--pipeline-foundations)
+   - Slide 0.1 — Context: ทำไมต้องทำ SEA สำหรับ TSL
+   - Slide 0.2 — Input Data: Test.eaf และ Tiers
+   - Slide 0.3 — S: Segment (MediaPipe Holistic + E4s-1 GRU)
+   - Slide 0.4 — E: Embed (SignCLIP + Similarity Matrix)
 1. [PART 1 — Task 1 Pipeline Recap](#part-1--task-1-pipeline-recap)
    - Slide 1.1 — ภาพรวม pipeline
    - Slide 1.2 — DP alignment ทำงานอย่างไร
    - Slide 1.3 — ทำไม Overlap ถึงเกิด (และวิธีแก้)
+   - Slide 1.4 — 7 Experiments: วิวัฒนาการและเหตุผล
+   - Slide 1.5 — Full Results Table
+   - Slide 1.6 — Evaluation Method: Text-lookup → Index-based
 2. [PART 2 — Task 2 สิ่งที่เพิ่มจาก Task 1](#part-2--task-2-สิ่งที่เพิ่มจาก-task-1)
    - Slide 2.1 — Granularity: sentence → sign-gesture
    - Slide 2.2 — Per-sentence Monotonic DP
@@ -36,8 +45,195 @@
    - Slide 3.3 — ทำไม Gloss ชนะ
    - Slide 3.4 — Caveat: Ground-truth leakage
    - Slide 3.5 — Recommendation
-4. [Closing Slide — Recap (Part 1–3 wrap-up)](#closing-slide--recap-part-13-wrap-up)
+4. [Closing Slide — Recap (Part 0–3 wrap-up)](#closing-slide--recap-part-03-wrap-up)
 5. [Appendix — What's Next (progress doc only)](#appendix--whats-next-progress-doc-only) — *not slides*
+
+---
+
+═══════════════════════════════════════════════════════════════════════
+
+## PART 0 — Project Overview & Pipeline Foundations
+
+> 📊 **Slides for this part: 0.1, 0.2, 0.3, 0.4**
+> เป้าหมาย: ให้ผู้อ่านที่ไม่เคยเห็น SEA เข้าใจ context, ข้อมูล, และ 2 ขั้นตอนแรก (Segment + Embed) ก่อนเข้า DP
+
+═══════════════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────────────
+
+### Slide 0.1 — Context: ทำไมต้องทำ SEA สำหรับ TSL
+
+#### SEA คืออะไร
+
+**SEA** = **S**egment → **E**mbed → **A**lign — pipeline สำหรับ align คำบรรยายกับท่ามือในวิดีโอภาษามือ
+พัฒนาโดย Jiang et al. (EMNLP 2024, [arXiv:2512.08094](https://arxiv.org/abs/2512.08094)) สำหรับ BSL (British Sign Language)
+**งานนี้นำ SEA มา cross-lingual transfer กับ TSL (Thai Sign Language) โดยไม่ต้อง retrain โมเดล**
+
+#### ทำไมถึงจำเป็น — Sign Delay Problem
+
+```text
+Speaker (เสียงพูด):  "เด็ก  เรียน"
+                      │      │
+                      ▼      ▼
+Timeline:  ══════════[35.0s][36.5s]═══════════════
+                                    ↑ speech timestamp
+
+Interpreter (ท่ามือ):              "เด็ก  เรียน"
+                                    │      │
+                                    ▼      ▼
+Timeline:  ════════════════════════[36.0s][37.2s]══
+                                    ↑ sign timestamp
+                                    (ช้ากว่าเสียง ~0.5–2s)
+```
+
+ผู้แปลต้องรับฟังก่อนแล้วจึงแปล → คำบรรยาย (timestamp จากเสียง) **ไม่ตรงกับจังหวะท่ามือจริงเสมอ**
+
+#### 2 Tasks ที่แก้ปัญหา
+
+| Task | Input → Output | Ground Truth | เป้าหมาย |
+| --- | --- | --- | --- |
+| **Task 1** | CC_Input (119 cues, speech timing) → CC_Aligned (119 cues, sign timing) | CC_Aligned (manual, นักวิจัย) | เลื่อน subtitle timestamp ให้ตรงกับท่ามือ |
+| **Task 2** | Gloss (119 sentences with tokens) → Gloss Labeling (852 sign-level entries) | Gloss Labeling (manual, นักวิจัย) | ลงลึกจาก sentence → ท่ามือเดี่ยว (sub-sentence) |
+
+---
+
+───────────────────────────────────────────────────────────────────────
+
+### Slide 0.2 — Input Data: Test.eaf และ Tiers
+
+#### วิดีโอที่ใช้ทดสอบ
+
+| ไฟล์ | คำอธิบาย | ขนาด |
+| --- | --- | --- |
+| `04.mp4` | วิดีโอ "การเปรียบเทียบและเรียงลำดับ" — 11.07 นาที, 1920×1080, 60fps | ~80 MB |
+| `04.pose` | Skeleton landmarks จาก MediaPipe Holistic (543 จุด × ทุกเฟรม) | **358 MB** |
+| `Test.eaf` | ELAN annotation file — source ของ tiers ทั้งหมด | — |
+
+#### Tiers ใน Test.eaf
+
+```text
+┌─────────────────┬────────┬──────────────────────────────────────────────────┐
+│ Tier            │ Count  │ บทบาท                                            │
+├─────────────────┼────────┼──────────────────────────────────────────────────┤
+│ CC              │   172  │ คำบรรยายดิบ (timestamp จากเสียง) — ไม่ใช้แล้ว    │
+│ CC_Input        │   119  │ คำบรรยาย curated → INPUT Task 1                  │
+│ CC_Aligned      │   119  │ ที่นักวิจัย align ด้วยมือ → GROUND TRUTH Task 1  │
+│ Gloss           │   119  │ Gloss tier ดั้งเดิม → INPUT Task 2 (ดีที่สุด)   │
+│ Gloss_Input     │   119  │ Gloss tier curated → INPUT Task 2 (ด้อยกว่า)     │
+│ Gloss Labeling  │   852  │ annotation รายท่ามือ → GROUND TRUTH Task 2       │
+└─────────────────┴────────┴──────────────────────────────────────────────────┘
+```
+
+> **วิวัฒนาการ:** เริ่มต้นใช้ CC (172 cues) → เปลี่ยนเป็น CC_Input (119 cues) เมื่อมี Test.eaf curated
+> **ทำไม Gloss ≠ Gloss_Input:** Gloss มี 852 tokens = 852 GT entries (1:1 ตรงกัน); Gloss_Input มี 889 tokens (+37 ส่วนเกิน)
+
+---
+
+───────────────────────────────────────────────────────────────────────
+
+### Slide 0.3 — S: Segment ตรวจจับท่ามือแต่ละท่า
+
+#### Step 1 — Pose Estimation (MediaPipe Holistic)
+
+```text
+04.mp4  ─►  videos_to_poses  ─►  04.pose (358 MB)
+            │
+            ├ --format mediapipe
+            ├ --model_complexity 2      (ความแม่นยำสูงสุด)
+            ├ --refine_face_landmarks   (ใบหน้าละเอียด)
+            └ --no-smooth_landmarks     (ต้องการ boundary คมชัด)
+
+Output: 543 landmarks ต่อเฟรม × 60fps
+        └─ มือ: 21×2 = 42 จุด
+           ใบหน้า: 468 จุด
+           ลำตัว: 33 จุด
+```
+
+#### Step 2 — Segmentation (E4s-1 GRU)
+
+โมเดล **E4s-1** (EMNLP 2023) — GRU-based binary classifier ต่อเฟรม train บน BOBSL dataset (BSL):
+
+```text
+04.pose  ─►  E4s-1 GRU  ─►  probability per frame: [sign] vs [rest/transition]
+                │
+         Threshold 2 ค่า:
+           sign-b-threshold = 30  →  boundary candidate (จุดเปลี่ยนท่า)
+           sign-o-threshold = 50  →  onset candidate (จุดเริ่มท่าใหม่)
+                │
+         Non-max suppression
+                │
+         Output EAF:
+           SIGN tier     : 2,780 segments  (แต่ละ segment = 1 ท่ามือ)
+           SENTENCE tier : 418 segments    (กลุ่มประโยค)
+```
+
+| threshold | ค่าสูง | ค่าต่ำ |
+| --- | --- | --- |
+| `sign-b-threshold` | ตัด segment น้อยลง | segment ถี่ขึ้น |
+| `sign-o-threshold` | จับเฉพาะท่าชัดเจน | จับท่าเบาๆ ด้วย |
+
+> ⚠️ **Critical warnings:**
+> (1) ต้องส่ง `--sign-b-threshold 30 --sign-o-threshold 50` เสมอ — default ใน config.py คือ 70 (ผิด)
+> (2) `--segmentation_dir` ชี้ไป **parent dir** (`segmentation_output`) ไม่ใช่ `E4s-1_30_50`
+
+---
+
+───────────────────────────────────────────────────────────────────────
+
+### Slide 0.4 — E: Embed แปลงท่ามือและข้อความเป็น Vector
+
+#### SignCLIP คืออะไร
+
+**SignCLIP** (EMNLP 2024) — โมเดล multimodal ที่ project ทั้ง sign pose และ text ลงใน **768-dim embedding space เดียวกัน**
+
+- ท่ามือ "เด็ก" และ text "เด็ก" → vector ที่ **ใกล้กัน** ใน space นี้ (cosine similarity สูง)
+
+| Variant | Checkpoint | Train language | Suitability สำหรับ TSL |
+| --- | --- | --- | --- |
+| `bsl` | `bobsl_finetune_checkpoint_best.pt` | British Sign Language | ปานกลาง |
+| `multilingual` | `baseline_temporal_checkpoint_best.pt` | หลายภาษามือ | **ดีที่สุด ✓** |
+| `asl` | `asl_finetune_checkpoint_best.pt` | American Sign Language | ด้อยกว่า |
+
+> **ทำไม multilingual ดีที่สุดสำหรับ TSL:** train บน dataset หลายภาษา → generalize มา TSL ได้ดีกว่า BSL-only หรือ ASL-only
+
+#### Sign Embedding (`extract_episode_features.py --feature_type sign`)
+
+```text
+For each SIGN segment [start, end]:
+  1. slice pose frames จาก 04.pose
+  2. normalize landmark ตาม shoulder reference
+  3. zero-pad / trim → 32 frames คงที่
+  4. forward pass SignCLIP visual encoder
+  5. pooled output → 768-dim vector
+
+Output: (2780, 768) numpy array
+```
+
+#### Text/Subtitle Embedding (`--feature_type subtitle`)
+
+```text
+For each cue text:
+  1. prepend language tag: "<en> <bfi>" + cue_text
+  2. tokenize → token IDs
+  3. forward pass SignCLIP text encoder
+  4. pooled output → 768-dim vector
+
+Output: (119, 768) numpy array
+```
+
+#### Similarity Matrix — สะพานระหว่าง Text กับ Sign
+
+```text
+subtitle_emb  (119 × 768)   × sign_emb.T  (768 × 2780)
+         ↓
+sim_matrix  (119 × 2780)   ← sim[i][j] = "ความเหมาะสม" ของ cue_i กับ sign_j
+         ↓
+softmax normalization (row-wise)   ← amplify peaks, suppress noise
+         ↓
+prefix cumsum (sim_cumsum)         ← คำนวณ similarity ของ range [k,j) ได้ O(1)
+```
+
+> **ทำไม softmax ไม่ใช่ raw cosine:** Raw cosine ของ SignCLIP กระจุกแค่ ~0.2–0.4 ทั่ว matrix (ต่างกันน้อย) — softmax amplify ค่าสูงสุดของแต่ละ row → DP เห็น signal ที่ชัดขึ้นว่า segment ไหนเหมาะกับ cue ไหน
 
 ---
 
@@ -278,6 +474,116 @@ for i in range(len(cues) - 1):
 
 > ✅ **Verified:** Mean offset / coverage ของ 7 experiments **เท่ากันเป๊ะ**
 > ก่อนและหลัง overlap fix — แสดงว่า fix ปลอดภัย 100 %
+
+---
+
+───────────────────────────────────────────────────────────────────────
+
+### Slide 1.4 — 7 Experiments: วิวัฒนาการและเหตุผล
+
+> แต่ละ experiment เพิ่ม/เปลี่ยนอะไรจาก experiment ก่อนหน้า และทำไม
+
+#### Experiment A — Baseline (timing only)
+
+**เหตุผล:** รัน DP อิงเวลาเพียงอย่างเดียว (ไม่ใช้ embedding) เพื่อสร้าง baseline
+**ผล:** Mean start shift ~2.49 s — สูงมาก แสดงว่า timing alone ไม่พอ
+
+#### Experiment B1 — BSL + CC text
+
+**เหตุผล:** เพิ่ม semantic embedding ด้วย BSL SignCLIP เพื่อดูว่า embedding ช่วยลด offset ได้ไหม
+**ผล:** Mean ~2.49 s — ยังสูง เพราะ parameters ยังไม่ได้ tune
+
+#### Experiment B2 — BSL + CC text + tuned params
+
+**เหตุผล:** B1 ยังแย่ → tune bias, duration/gap penalty
+**ผล:** Mean **+1.02 s**, ±1s = 74 % — ดีขึ้น แต่ยังห่าง GT
+
+#### Experiment B_MULTI — Multilingual + CC text
+
+**เหตุผล:** BSL train บน BSL-specific data → Multilingual น่าจะ generalize มา TSL ได้ดีกว่า
+**ผล:** Mean **+0.91 s**, ±1s = 78 % — ดีกว่า BSL อย่างชัดเจน ✓ ยืนยัน Multilingual เหมาะกว่าสำหรับ TSL
+
+#### Experiment C_MULTI ⭐ — Multilingual + Gloss text
+
+**เหตุผล:** CC text คือคำพูด (ภาษาไทยพูด) ซึ่งต่างจากท่ามือ; Gloss text คือ sign notation ("สวัสดี ผายมือ เด็ก") → embedding ควรใกล้ sign embedding มากกว่า
+**ผล:** Mean **−0.16 s**, ±1s = 73.9 %, ±3s = **100 %** — **ดีที่สุด ⭐**
+
+#### Experiment C_MULTI_word — word-level similarity
+
+**เหตุผล:** ทดสอบ embed ทีละคำแล้ว pool (แทน embed ทั้ง cue) เพราะ Gloss text มีหลายคำ
+**ผล:** Mean +0.51 s, ±1s = 77 % — **ไม่ช่วย** เทียบ C_MULTI → sentence pooling ดีพอแล้ว
+
+#### Experiments D_ASL, D_ASL_gloss, D_ASL_word — ASL model
+
+**เหตุผล:** ทดสอบ ASL model (language-specific อีกตัว) เพื่อเปรียบเทียบกับ Multilingual
+**ผล:** ทุก variant แย่กว่า Multilingual — ASL-specific ไม่ generalize มา TSL ดีเท่า Multilingual
+
+---
+
+───────────────────────────────────────────────────────────────────────
+
+### Slide 1.5 — Full Results Table (index-based evaluation, 119/119 cues)
+
+| Experiment | Model | Text input | Mean offset | ±1 s | ±2 s | ±3 s | Overlap → fix |
+| --- | --- | --- | ---: | ---: | ---: | ---: | --- |
+| **C_MULTI ⭐** | Multilingual | Gloss | **−0.16 s** | **73.9 %** | 95.0 % | **100 %** | 88 % → **0 %** |
+| C_MULTI_word | Multilingual | Gloss (word) | +0.51 s | 77 % | 96 % | 99 % | 88 % → **0 %** |
+| B_MULTI | Multilingual | CC text | +0.91 s | 78 % | 97 % | 99 % | 88 % → **0 %** |
+| B2 | BSL | CC text | +1.02 s | 74 % | 96 % | 97 % | 88 % → **0 %** |
+| D_ASL_word | ASL | Gloss (word) | +0.78 s | 67 % | 93 % | 96 % | 88 % → **0 %** |
+| D_ASL_gloss | ASL | Gloss | +0.77 s | 64 % | 91 % | 97 % | 88 % → **0 %** |
+| D_ASL | ASL | CC text | +1.25 s | 59 % | 81 % | 96 % | 89 % → **0 %** |
+
+**สรุป pattern จากตาราง:**
+
+```text
+Multilingual > BSL > ASL              (model ranking สำหรับ TSL)
+Gloss text   > CC text                (text input: sign notation ดีกว่าคำพูด)
+Sentence-level pooling > word-level   (word-level ไม่ช่วย — complexity เพิ่มโดยไม่ได้ผล)
+```
+
+> 💡 **F1 @ 0.50 IoU ของ C_MULTI = 88.2 %** (Frame accuracy = 82.6 %)
+
+---
+
+───────────────────────────────────────────────────────────────────────
+
+### Slide 1.6 — Evaluation Method: Text-lookup → Index-based
+
+> **การเปลี่ยน evaluation method เป็นสิ่งสำคัญที่สุดของ Progress_04052026**
+> (ผลทุกตัวใน Slide 1.5 ใช้ index-based — ต้องเข้าใจความแตกต่าง)
+
+#### Method 1 — Text-lookup (รุ่นเดิม)
+
+```text
+For each pred_cue:
+  ค้นหา GT entry ที่ text ตรงกัน (exact string match)
+  ถ้าไม่เจอ → ไม่นับ (missed)
+
+ปัญหา: ผู้ annotate แก้ข้อความใน CC_Aligned บางส่วน
+        (รวมประโยค, แก้คำ) → text ไม่ตรงแม้เป็น cue เดียวกัน
+ผลลัพธ์: matched เพียง 69/172 (58%) → ผลที่ได้ไม่ครอบคลุม
+```
+
+#### Method 2 — Index-based (รุ่นใหม่)
+
+```text
+pred_cues[i]  ↔  gt_cues[i]   (จับคู่ตาม index โดยตรง)
+
+เงื่อนไข: ใช้ CC_Input (119 cues) แทน CC (172 cues)
+          → pred และ GT มีจำนวน cue เท่ากัน → match ได้ 119/119 = 100%
+```
+
+| | Text-lookup | Index-based |
+| --- | ---: | ---: |
+| Coverage | **69/172 (58%)** | **119/119 (100%)** |
+| C_MULTI mean offset | +0.49 s | **−0.16 s** |
+| C_MULTI ±1 s | 80 % | 73.9 % |
+| C_MULTI ±3 s | 99 % | **100 %** |
+
+> ⚠️ **ตัวเลขเก่าที่อาจเห็นในเอกสารก่อน Progress_04052026** (เช่น "80% within ±1s")
+> มาจาก text-lookup บน 69/172 cues — **ไม่ใช้อ้างอิงอีกต่อไป**
+> ใช้ index-based 119/119 เป็น metric มาตรฐาน
 
 ---
 
@@ -545,22 +851,24 @@ Gloss มี total annotation duration ใหญ่กว่า (560 s vs 541 s)
 
 ═══════════════════════════════════════════════════════════════════════
 
-## Closing Slide — Recap (Part 1–3 wrap-up)
+## Closing Slide — Recap (Part 0–3 wrap-up)
 
-> 📊 **Slide สุดท้ายของ presentation — รวบยอด 3 parts**
+> 📊 **Slide สุดท้ายของ presentation — รวบยอด 4 parts**
 
-1. **Pipeline Task 1 + Task 2 ทำงานครบ end-to-end** บน video `04`
+1. **SEA cross-lingual transfer ใช้ได้กับ TSL** โดยไม่ต้อง retrain — pipeline S→E→A ทำงาน end-to-end
+
+2. **Pipeline Task 1 + Task 2 ทำงานครบ** บน video `04`
    - Task 1: 7 experiments, **C_MULTI ⭐** ดีสุด (mean offset −0.16 s, ±3s = 100 %)
-   - Task 2: prototype ทำงาน 0 fallback ทั้ง 119 sentences
+   - Task 2: prototype 0 fallback ทั้ง 119 sentences, Mean IoU = 0.4901
 
-2. **Overlap คือ design quirk ของ DP** ที่แก้ด้วย post-processing
-   (clamp end) → ไม่กระทบ start metric เลย
+3. **Key findings:**
+   - Multilingual > BSL > ASL สำหรับ TSL
+   - Gloss text > CC text เป็น embedding input
+   - Overlap คือ design quirk ของ DP → แก้ด้วย single-pass clamp (ปลอดภัย 100%)
+   - Word-level similarity ไม่ช่วยสำหรับ TSL
 
-3. **Task 2 lifts granularity จาก sentence → sub-sentence** ผ่าน
-   per-sentence monotonic DP
-
-4. **Ablation: `Gloss` ชนะ `Gloss_Input` ทุก IoU metric** (+9.5 pp ที่
-   threshold 0.5) — แต่ text-match advantage มี leakage component
+4. **Ablation: `Gloss` ชนะ `Gloss_Input` ทุก IoU metric** (+9.5 pp ที่ threshold 0.5)
+   — แต่ text-match advantage มี leakage component
    → **Recommendation: ใช้ `--tier Gloss` เป็น default**
 
 ═══════════════════════════════════════════════════════════════════════
