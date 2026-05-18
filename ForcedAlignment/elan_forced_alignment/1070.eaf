@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ANNOTATION_DOCUMENT xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" AUTHOR="" DATE="2025-01-01T00:00:00+00:00" FORMAT="3.0" VERSION="3.0" xsi:noNamespaceSchemaLocation="http://www.mpi.nl/tools/elan/EAFv3.0.xsd">
+    <HEADER MEDIA_FILE="" TIME_UNITS="milliseconds">
+        <MEDIA_DESCRIPTOR MEDIA_URL="file:///C:/Users/dniam/Documents/Dechathon_N/NECTEC/SEA/ForcedAlignment/เธซเธเธฑเธเธชเธทเธญเธ เธฒเธฉเธฒเธกเธทเธญเนเธ—เธข/เธซเธเธฑเธเธชเธทเธญเธ เธฒเธฉเธฒเธกเธทเธญเนเธ—เธขเน€เธฅเนเธก 6 MP/1070.mp4" MIME_TYPE="video/mp4" RELATIVE_MEDIA_URL="../เธซเธเธฑเธเธชเธทเธญเธ เธฒเธฉเธฒเธกเธทเธญเนเธ—เธข/เธซเธเธฑเธเธชเธทเธญเธ เธฒเธฉเธฒเธกเธทเธญเนเธ—เธขเน€เธฅเนเธก 6 MP/1070.mp4" TIME_ORIGIN="0" />
+        <PROPERTY NAME="lastUsedAnnotationId">0</PROPERTY>
+    </HEADER>
+    <TIME_ORDER>
+        <TIME_SLOT TIME_SLOT_ID="ts1" TIME_VALUE="0" />
+        <TIME_SLOT TIME_SLOT_ID="ts2" TIME_VALUE="6416" />
+        <TIME_SLOT TIME_SLOT_ID="ts3" TIME_VALUE="2083" />
+        <TIME_SLOT TIME_SLOT_ID="ts4" TIME_VALUE="4416" />
+        <TIME_SLOT TIME_SLOT_ID="ts5" TIME_VALUE="2916" />
+    </TIME_ORDER>
+    <TIER TIER_ID="CC" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a217c8a73" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>ทวีปออสเตรเลีย</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <TIER TIER_ID="CC_Aligned" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a324e7247" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts3">
+                <ANNOTATION_VALUE>sil</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="ae981f92e" TIME_SLOT_REF1="ts3" TIME_SLOT_REF2="ts4">
+                <ANNOTATION_VALUE>ทวีปออสเตรเลีย</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a5de6d68f" TIME_SLOT_REF1="ts4" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>sil</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <TIER TIER_ID="Gloss" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a982d4467" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>ของ จุด(ใหญ่ติดที่ข้างของ)|จิงโจ้|</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <TIER TIER_ID="Gloss1" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="ae72b754c" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>sil|ของ จุด(ใหญ่ติดที่ข้างของ)|จิงโจ้|sil|</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <TIER TIER_ID="Gloss2" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="addc098cc" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>sil1|ของ จุด(ใหญ่ติดที่ข้างของ)|จิงโจ้|sil2|</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <TIER TIER_ID="Gloss_Labeling" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="ae39682ba" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts5">
+                <ANNOTATION_VALUE>ของ จุด(ใหญ่ติดที่ข้างของ)</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="ad05a7502" TIME_SLOT_REF1="ts5" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>จิงโจ้</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <TIER TIER_ID="Gloss_Labeling1" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a43dd849f" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts3">
+                <ANNOTATION_VALUE>sil</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a414e9ed1" TIME_SLOT_REF1="ts3" TIME_SLOT_REF2="ts5">
+                <ANNOTATION_VALUE>ของ จุด(ใหญ่ติดที่ข้างของ)</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a06071c58" TIME_SLOT_REF1="ts5" TIME_SLOT_REF2="ts4">
+                <ANNOTATION_VALUE>จิงโจ้</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a2b95f8d5" TIME_SLOT_REF1="ts4" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>sil</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <TIER TIER_ID="Gloss_Labeling2" LINGUISTIC_TYPE_REF="default-lt">
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a44d38ce7" TIME_SLOT_REF1="ts1" TIME_SLOT_REF2="ts3">
+                <ANNOTATION_VALUE>sil1</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a47ef87fa" TIME_SLOT_REF1="ts3" TIME_SLOT_REF2="ts5">
+                <ANNOTATION_VALUE>ของ จุด(ใหญ่ติดที่ข้างของ)</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="a3e28a572" TIME_SLOT_REF1="ts5" TIME_SLOT_REF2="ts4">
+                <ANNOTATION_VALUE>จิงโจ้</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+        <ANNOTATION>
+            <ALIGNABLE_ANNOTATION ANNOTATION_ID="aa7233993" TIME_SLOT_REF1="ts4" TIME_SLOT_REF2="ts2">
+                <ANNOTATION_VALUE>sil2</ANNOTATION_VALUE>
+            </ALIGNABLE_ANNOTATION>
+        </ANNOTATION>
+    </TIER>
+    <LINGUISTIC_TYPE GRAPHIC_REFERENCES="false" LINGUISTIC_TYPE_ID="default-lt" TIME_ALIGNABLE="true" />
+    <CONSTRAINT DESCRIPTION="Time subdivision of parent annotation's time interval, no time gaps allowed within this interval" STEREOTYPE="Time_Subdivision" />
+    <CONSTRAINT DESCRIPTION="Symbolic subdivision of a parent annotation. Annotations cannot overlap." STEREOTYPE="Symbolic_Subdivision" />
+    <CONSTRAINT DESCRIPTION="Symbolic association of a parent annotation, 1-1 relation" STEREOTYPE="Symbolic_Association" />
+    <CONSTRAINT DESCRIPTION="Time alignable annotations within the parent annotation's time interval" STEREOTYPE="Included_In" />
+</ANNOTATION_DOCUMENT>
