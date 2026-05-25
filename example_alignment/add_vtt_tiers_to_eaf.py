@@ -21,7 +21,7 @@ import xml.etree.ElementTree as ET
 import argparse
 from pathlib import Path
 
-BASE = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment")
+BASE = Path(__file__).parent
 # Base for comparison: Test.eaf (has CC, CC_Input, CC_Aligned, Gloss, Gloss_Input, Gloss Labeling)
 # อัปเดต 2026-05-04: ใช้ Test.eaf เป็น source แทน การเปรียบเทียบฯ.eaf
 SOURCE_EAF  = BASE / "Test.eaf"

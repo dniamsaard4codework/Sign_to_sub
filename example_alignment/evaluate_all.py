@@ -15,27 +15,29 @@ from pathlib import Path
 
 FPS_DEFAULT = 25  # frame rate used for frame-level accuracy and F1 metrics
 
-EAF_PATH = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\Test.eaf")
+HERE = Path(__file__).parent
 
-CC_VTT = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\subtitles\04.vtt")
+EAF_PATH = HERE / "Test.eaf"
+
+CC_VTT = HERE / "subtitles" / "04.vtt"
 
 # (vtt_path, use_cc_text_for_matching)
 # use_cc_text_for_matching=True  -> cue text is Gloss; look up CC text by index for matching
 EXPERIMENTS = {
     "B2   (BSL, CC text, tuned)":
-        (Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\aligned_output_with_embedding_tuned\04.vtt"), False),
+        (HERE / "aligned_output_with_embedding_tuned" / "04.vtt", False),
     "B_MULTI (multilingual, CC text)":
-        (Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\aligned_output_multi_b2\04.vtt"), False),
+        (HERE / "aligned_output_multi_b2" / "04.vtt", False),
     "C_MULTI  (multilingual, Gloss text)":
-        (Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\aligned_output_multi_gloss\04.vtt"), True),
+        (HERE / "aligned_output_multi_gloss" / "04.vtt", True),
     "C_MULTI_word (multilingual, Gloss, word-level)":
-        (Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\aligned_output_multi_gloss_word\04.vtt"), True),
+        (HERE / "aligned_output_multi_gloss_word" / "04.vtt", True),
     "D_ASL        (ASL, CC text)":
-        (Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\aligned_output_asl_b2\04.vtt"), False),
+        (HERE / "aligned_output_asl_b2" / "04.vtt", False),
     "D_ASL_gloss  (ASL, Gloss text)":
-        (Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\aligned_output_asl_gloss\04.vtt"), True),
+        (HERE / "aligned_output_asl_gloss" / "04.vtt", True),
     "D_ASL_word   (ASL, Gloss, word-level)":
-        (Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\aligned_output_asl_gloss_word\04.vtt"), True),
+        (HERE / "aligned_output_asl_gloss_word" / "04.vtt", True),
 }
 
 

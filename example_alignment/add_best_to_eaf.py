@@ -32,7 +32,7 @@ from add_vtt_tiers_to_eaf import (
     load_vtt,
 )
 
-BASE = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment")
+BASE = Path(__file__).parent
 ABLATION = BASE / "ablation"
 SOURCE_EAF = BASE / "Test.eaf"
 TARGET_EAF = BASE / "Test_best.eaf"

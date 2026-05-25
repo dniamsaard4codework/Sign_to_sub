@@ -10,9 +10,10 @@
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-SOURCE_EAF = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\Test.eaf")
-CC_VTT     = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\subtitles\04.vtt")
-OUT_VTT    = Path(r"C:\Users\dniam\Documents\Dechathon_N\NECTEC\SEA\example_alignment\subtitles_gloss_cc_time\04.vtt")
+HERE       = Path(__file__).parent
+SOURCE_EAF = HERE / "Test.eaf"
+CC_VTT     = HERE / "subtitles" / "04.vtt"
+OUT_VTT    = HERE / "subtitles_gloss_cc_time" / "04.vtt"
 
 
 def ms_to_vtt(v: int) -> str:
