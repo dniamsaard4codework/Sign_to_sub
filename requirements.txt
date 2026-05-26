@@ -1,0 +1,33 @@
+# Authoritative install instructions are in README.md (Step 3 - Step 6).
+# This file mirrors them for `pip install -r requirements.txt` convenience.
+#
+# NOT covered here (install separately, see README):
+#   - PyTorch: needs CUDA-specific wheel index, e.g.
+#       pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+#   - SignCLIP / fairseq_signclip: clone + editable install from
+#       https://github.com/J22Melody/fairseq.git (~29 GB with model checkpoints)
+#   - ffmpeg: system binary, install separately for optional video cropping
+
+# Core (subtitle / annotation I/O)
+pysrt
+webvtt-py
+lxml
+numpy==1.26.4
+pympi-ling
+
+# Pose extraction & segmentation
+mediapipe==0.10.21
+pose-format==0.12.3
+git+https://github.com/J22Melody/segmentation@bsl
+
+# Pipeline utilities
+beartype
+numba
+tqdm
+scikit-learn
+tabulate
+matplotlib
+sentence-transformers
+
+# Optional: download SignCLIP checkpoints from Google Drive (Step 6)
+# gdown
