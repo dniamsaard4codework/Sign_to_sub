@@ -1642,7 +1642,64 @@ venv\Scripts\python.exe ForcedAlignment\run_forced_alignment.py --configs all
 1. ใช้ **Config #1** เป็นผลหลักของรายงาน (F1 68.6%, mIoU 0.5928 — เทียบได้กับ 04.mp4 0.4901 → **ดีกว่า**)
 2. ห้ามเทียบ Config #3 mIoU โดยตรงกับ 04.mp4 ใน publication
 3. สำหรับ Gloss-tier configs ใช้ `% any-overlap over GT` (97.3% สำหรับ #3) หรือ `frame_accuracy` (26.2%) เป็น metric เปรียบเทียบ — ทั้งคู่ไม่อ่อนไหวต่อความกว้างของ GT
-4. Config #4–5 ได้ Recall@0.5 ดีกว่า #3 ถึง 2.6 เท่า เพราะ sil tokens แบ่ง GT ออกเป็นช่วงย่อย → ความกว้าง GT ใกล้ pred มากขึ้น
+4. Config #4–5 ได้ Recall@0.5 ดีกว่า #3 ถึง 2.6 เท่า เพราะ sil tokens แบ่ง GT ออกเป็นช่วงย่อย → ความกว้าง GT ใกล้ pred มากขึ้น (ไม่ใช่เพราะ sil modeling ทำงานดี — ดู §10.11b)
+
+### 10.11b Architectural Mismatch — ทำไม sil-bearing configs ผลตก (resolved 25 พ.ค. 2569)
+
+**Finding:** Configs ที่ใส่ sil tokens ใน input (#2, #4, #5) ผลตกหนัก **ไม่ใช่เพราะ DP ทำงานผิด** แต่เป็นเพราะ **architectural mismatch ระหว่าง SEA E4s-1 segmenter กับการ model silence**
+
+**Evidence — distinct fallback clips ต่อ config:**
+
+| Config | Tokens/clip | Distinct fallback clips | เพิ่มจาก base | สาเหตุ |
+| ---: | ---: | ---: | ---: | --- |
+| 1 (CC, no sil) | 1.0 | 57 | base | embedding หาย |
+| 2 (CC + sil) | 3.0 | **142** | **+85** | K < T (SEA ไม่มี sil segment) |
+| 3 (Gloss, no sil) | 1.5 | 60 | +3 | embedding หาย |
+| 4 (Gloss + sil) | 3.5 | **154** | **+97** | K < T |
+| 5 (Gloss + numbered sil) | 3.5 | **154** | **+97** | K < T |
+
+**Root cause:**
+
+SEA E4s-1 ถูก train บน binary classification "frame นี้ทำท่าอยู่หรือไม่?" → output เป็น SIGN segments **เฉพาะตอน active signing** ไม่สร้าง segment สำหรับช่วงพัก/sil (เป็น design intent ไม่ใช่ bug)
+
+ปัญหาเกิดเมื่อ input config มี sil tokens:
+
+- ถ้า K (segments) < T (tokens) → DP มี segments ไม่พอ → fallback uniform ทันที
+- ถ้า K ≥ T → DP ถูกบังคับให้ assign sil ให้ word-segment ที่ผิด → text match ตก + IoU ตก
+
+**ผลกระทบเชิงตัวเลข:** 7.5–8.6% ของ dataset (85–97 clips ต่อ config) ตกหล่นเป็น uniform split ทันทีเพราะ K < T
+
+**Per-pair analysis แยก DP vs Fallback (สำคัญ):**
+
+| Config | DP pairs | DP mean IoU | DP hit@0.5 | Fallback pairs | Fallback mean IoU | Fallback hit@0.5 |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 (CC, no sil) | 1,075 | **0.608** | **73.5%** | 57 | 0.302 | 0.0% |
+| 2 (CC + sil) | 2,970 | 0.127 | 7.0% | 426 | 0.738 | **92.5%** |
+| 3 (Gloss, no sil) | 1,640 | 0.217 | 3.7% | 73 | 0.962 | **100%** |
+| 4 (Gloss + sil) | 3,482 | 0.154 | 11.1% | 495 | 0.709 | **88.3%** |
+| 5 (Gloss + num sil) | 3,482 | 0.154 | 11.0% | 495 | 0.711 | **88.3%** |
+
+**Key insights ที่สำคัญกว่า K<T เพียงอย่างเดียว:**
+
+1. **DP ทำงานดีเฉพาะ Config 1** (hit 73.5%) — เมื่อมี sil tokens ใน input DP ทำได้แย่มาก (Config 2: 7%, Config 4: 11.1%) เพราะ per-token softmax บังคับให้ DP จับ segment แม้ sil token ไม่มี real signal
+2. **Fallback uniform บังเอิญตรงโครงสร้าง GT** ใน sil-bearing configs — Config 2 fallback hit 92.5%, Config 4 fallback hit 88.3% เพราะทั้ง uniform split และ GT (sil+word+sil) แบ่ง clip เท่า ๆ กัน
+3. **53% ของ hits ของ Config 4** มาจาก fallback uniform (437/825) ไม่ใช่ DP → F1 ของ Config 4 ที่ดูสูงกว่า Config 3 มาจาก fallback ไม่ใช่ aligner ทำงานดีขึ้น
+
+**ทำไม Config 4/5 F1 ดูดีกว่า #3 ทั้งที่มี sil?** ไม่ใช่ sil modeling ดี และไม่ใช่ GT แคบลง (pred/GT ratio Config 4 = 0.37 ≈ Config 3 = 0.30) — เป็นเพราะ **fallback uniform บังเอิญตรง GT structure** ใน clips ที่มีหลาย sil tokens
+
+**ทำไม Config 5 (numbered sil) ≈ Config 4?** 91.7% ของ predictions identical กับ Config 4 (3,645 / 3,977 pairs) — Numbered sil เพิ่มความเฉพาะเจาะจงของ token embedding แต่ไม่มี structure ใน SIGN tier ให้ DP ใช้ (SEA ไม่มี sil segments)
+
+**Implications สำหรับงานต่อไป (corrected):**
+
+1. **Bottleneck คือ DP + sil tokens, ไม่ใช่ segmenter เพียงอย่างเดียว** — แม้คลิปที่ K ≥ T ก็ตาม DP ก็ยังสับสนเมื่อมี sil tokens (DP hit rate 7-11% ใน sil configs vs 73.5% ใน Config 1)
+2. **ทางแก้ที่เหมาะสมที่สุด (priority ใหม่):**
+   - (A) **Post-processing** ใช้ Config #1 หรือ #3 ทำ word alignment ก่อน แล้วเติม sil intervals ระหว่าง word predictions ในขั้นตอนแยก (ไม่ผ่าน DP) — ง่ายและตรง root cause
+   - (B) **แก้ DP cost function** ให้ sil tokens skip embedding หรือใช้ uniform similarity (ไม่บังคับ DP เลือก word-segment ผิด) — แก้ตรงจุดที่ DP สับสน
+   - (C) Synthesize "sil segments" ระหว่าง SIGN segments ก่อนเข้า DP — แก้ K<T แต่ไม่แก้ DP confusion
+   - (D) Fine-tune SEA E4s-1 ให้ output multi-class (sign/sil/transition) — ใหญ่ที่สุด
+3. **อย่ารายงาน Config 2/4/5 เป็น "sil modeling แย่"** — รายงานเป็น "DP-with-sil limitation" + ระบุว่า F1 ที่ดูสูงกว่า DP-only baseline มาจาก fallback uniform บังเอิญตรง GT structure
+
+ดูรายละเอียดเต็มที่ [ForcedAlignment/PLAN_ForcedAlignment_Task2.md §14.7](ForcedAlignment/PLAN_ForcedAlignment_Task2.md)
 
 ### 10.12 DP Alignment — กลไกการทำงานเชิงลึก (สรุปสั้น)
 

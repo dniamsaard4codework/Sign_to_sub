@@ -62,17 +62,17 @@
         <pref key="CC">
             <Object class="java.awt.Color">0,0,160</Object>
         </pref>
-        <pref key="Gloss_Labeling">
-            <Object class="java.awt.Color">90,160,90</Object>
-        </pref>
         <pref key="Gloss">
             <Object class="java.awt.Color">160,160,90</Object>
         </pref>
-        <pref key="Gloss2">
-            <Object class="java.awt.Color">0,160,160</Object>
+        <pref key="Gloss_Labeling">
+            <Object class="java.awt.Color">90,160,90</Object>
         </pref>
         <pref key="Gloss_Labeling1">
             <Object class="java.awt.Color">160,0,0</Object>
+        </pref>
+        <pref key="Gloss2">
+            <Object class="java.awt.Color">0,160,160</Object>
         </pref>
         <pref key="Gloss_Labeling2">
             <Object class="java.awt.Color">160,0,160</Object>

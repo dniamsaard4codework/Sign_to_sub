@@ -51,8 +51,11 @@ EXPERIMENTS = {
         "output": "CC_Aligned_silmodel_pred",
         "note": (
             "CC_Aligned2 ไม่มีอยู่จริงใน dataset; ใช้ CC_Aligned พร้อมเพิ่ม sil หัว/ท้าย. "
-            "Fallback 427 rows = 57 clips ที่ embedding หาย × tokens ต่อ clip "
-            "(CC tokens + sil หัว/ท้าย)"
+            "ผลตกหนัก (F1 17.6% vs config 1 ที่ 68.6%) เพราะ architectural mismatch: "
+            "SEA E4s-1 segmenter ตัด segment เฉพาะตอน active signing (ไม่สร้าง segment "
+            "สำหรับ sil) → เมื่อเพิ่ม sil tokens ใน input, จำนวน tokens เกินจำนวน segments "
+            "(K < T) ใน 85 clips → fallback uniform. รวม fallback clips จริง = 142 "
+            "(57 จาก embedding หาย + 85 จาก K < T)"
         ),
     },
     "3": {
@@ -75,8 +78,13 @@ EXPERIMENTS = {
         "input": "Gloss1",
         "output": "Gloss_Labeling1_pred",
         "note": (
-            "รวม sil token ใน input และ GT. "
-            "Fallback 495 rows = 57 clips × (avg ~3.5 tokens/clip รวม sil)"
+            "รวม sil token ใน input และ GT. Fallback clips จริง = 154 "
+            "(57 จาก K=0 + 97 จาก K<T). "
+            "F1 (20.7%) ดูดีกว่า config 3 (7.8%) แต่ DP จริง ๆ ทำได้แย่กว่า — "
+            "split per-pair: DP-driven pairs mean IoU = 0.154 (hit 11.1%), "
+            "fallback uniform pairs mean IoU = 0.709 (hit 88.3%). "
+            "53% ของ hits ทั้งหมดมาจาก fallback uniform ที่บังเอิญตรง GT structure "
+            "(sil+word+sil ใน GT ก็แบ่ง clip เท่า ๆ กันเหมือน uniform split)"
         ),
     },
     "5": {
@@ -85,8 +93,10 @@ EXPERIMENTS = {
         "input": "Gloss2",
         "output": "Gloss_Labeling2_pred",
         "note": (
-            "รวม sil1/sil2 token ใน input และ GT. "
-            "ผลใกล้เคียง config 4 (เพราะ token count เท่ากัน เพียงแต่ sil ถูก numbered)"
+            "รวม sil1/sil2 token ใน input และ GT. ผลเกือบเท่า config 4 "
+            "(F1 20.9% vs 20.7%) — 91.7% ของ predictions identical กับ config 4. "
+            "Numbered sil ไม่ช่วย DP เลือก segment ต่างกันมีนัยสำคัญ เพราะ SEA "
+            "ไม่มี sil segments อยู่แล้ว. Fallback clips = 154 เท่ากับ config 4"
         ),
     },
     "6": {
@@ -274,27 +284,44 @@ def fill_conclusion(doc: Document) -> None:
     )
     set_cell(
         table.cell(2, 1),
-        "1. Config #1 ชนะทุก metric หลักใน dataset นี้\n"
-        "2. Config #3 (Gloss -> Gloss_Labeling) ดู Mean IoU ต่ำ (0.2484) แต่ไม่ใช่ aligner ผิด — "
-        "ผลจาก error analysis พบว่า text match 100%, 72.7% ของ predictions อยู่ภายใน GT, "
-        "และ 88.7% ของความยาว pred อยู่ใน GT. สาเหตุคือ Gloss_Labeling annotation "
-        "ยืดทุก word ให้กินช่วงเวลายาว (avg 3.84s) ขณะที่ aligner ทำนายช่วงสัญลักษณ์จริง "
-        "(avg 1.16s) — IoU จึงต่ำตามนิยาม\n"
-        "3. Config #4-5 (รวม sil ใน GT) ดีกว่า #3 เพราะ sil token แบ่ง GT ออกเป็นช่วงย่อย "
-        "ทำให้ความกว้าง GT ใกล้ pred มากขึ้น (mIoU 0.22 vs 0.25 — Recall ดีขึ้น 2.6x)\n"
-        "4. มี 57 clips ที่ SEA E4s-1 ไม่ตรวจพบ SIGN segments → ถูก uniform fallback. "
-        "ใน config 2/4/5 fallback rows = 57 × tokens-per-clip จึงดูเยอะกว่า config 1",
+        "1. Config #1 ชนะทุก metric หลักใน dataset นี้ — DP ทำงานได้ดี (DP-driven mean IoU 0.608, hit 73.5%)\n"
+        "2. ทุก config ที่มี sil ใน input (#2, #4, #5) มี K<T fallback: "
+        "Distinct fallback clips: #1=57, #2=142 (+85), #3=60, #4=154 (+97), #5=154 (+97). "
+        "K=0 ใน 57 clips (SEA ไม่ detect sign เลย), K=1 ใน 40 clips, K=2 ใน 45 clips → "
+        "Config 2 (T=3) ตกหล่น 142 clips จาก K<3\n"
+        "3. ที่สำคัญกว่า: DP-driven pairs ทำได้แย่ในทุก sil-config — "
+        "Config 2 DP mean IoU = 0.127 (hit 7%), Config 4 DP mean IoU = 0.154 (hit 11.1%) "
+        "เทียบกับ Config 1 DP = 0.608 (hit 73.5%). "
+        "sil tokens ทำให้ DP สับสน (per-token softmax บังคับให้จับ segment แม้ไม่มี match จริง)\n"
+        "4. F1 ของ Config #2/#4/#5 ที่ดูสูงกว่า 'DP-only baseline' จริง ๆ มาจาก "
+        "fallback uniform ที่บังเอิญตรงโครงสร้าง GT — Config 4 fallback hit 88.3%, "
+        "Config 2 fallback hit 92.5% (uniform split ทำให้ pred = GT structure เพราะ "
+        "ทั้งคู่แบ่ง clip เท่า ๆ กันด้วย sil tokens)\n"
+        "5. Config #3 (Gloss, no sil) Mean IoU 0.2484 ดูต่ำกว่า 04.mp4 baseline (0.4901) "
+        "แต่ไม่ใช่ aligner regression — text match 100%, 72.7% ของ predictions อยู่ใน GT span, "
+        "88.7% ของความยาว pred อยู่ใน GT. สาเหตุคือ Gloss_Labeling ยืดทุก word ให้ครอบคลุม "
+        "ช่วงเวลายาว (avg 3.84s) ขณะที่ aligner ทำนายช่วงสัญลักษณ์จริง (avg 1.16s)",
     )
     set_cell(
         table.cell(3, 1),
-        "1. ใช้ Config #1 เป็นผลหลักของรายงาน (F1 68.6%, mIoU 0.5928) — เทียบได้กับ 04.mp4 baseline\n"
-        "2. ระมัดระวังเมื่อเทียบ Config #3 mIoU 0.2484 กับ 04.mp4 0.4901 โดยตรง — "
-        "ตัวเลขต่ำเพราะ Gloss_Labeling ของ 2 dataset annotate ด้วย convention ต่างกัน "
-        "(ForcedAlignment ยืด GT ให้เต็ม clip, 04.mp4 ใช้ช่วงสัญลักษณ์จริง) ไม่ใช่ aligner regression\n"
-        "3. ถ้าต้องการ metric เทียบ Gloss config โดยตรง แนะนำใช้ Frame Accuracy "
-        "(26.2% สำหรับ #3) หรือ % any-overlap (97.3%) แทน IoU@0.5\n"
-        "4. ปรับ SEA segmentation threshold หรือใช้ pose-based fallback "
-        "เพื่อลด 57 clips ที่ตกเป็น uniform fallback ในรอบถัดไป",
+        "1. ใช้ Config #1 เป็นผลหลักของรายงาน (F1 68.6%, mIoU 0.5928) — เทียบได้กับ 04.mp4 "
+        "baseline (0.4901) → ดีกว่า. DP-driven hit rate 73.5% สื่อว่า aligner แม่นยำจริงเมื่อ "
+        "input ไม่มี sil tokens รบกวน\n"
+        "2. อย่ารายงาน Config #2/#4/#5 เป็น 'sil modeling แย่' — bottleneck คือ DP ที่สับสน "
+        "เมื่อมี sil tokens ใน input ไม่ใช่เพราะ sil concept เอง. ทางแก้:\n"
+        "   (A) Post-processing: ใช้ Config #1 หรือ #3 ทำ word alignment ก่อน แล้วเติม "
+        "sil intervals ระหว่าง word predictions ในขั้นตอนแยก (ไม่ผ่าน DP เลย)\n"
+        "   (B) แก้ DP cost: ให้ sil tokens skip embedding หรือใช้ uniform similarity "
+        "เพื่อไม่บังคับ DP เลือก word-segment ผิด\n"
+        "   (C) Fine-tune SEA E4s-1 ให้ output multi-class (sign/sil/transition)\n"
+        "3. ระมัดระวังเมื่อเทียบ Config #3 mIoU 0.2484 กับ 04.mp4 0.4901 โดยตรง — "
+        "ตัวเลขต่ำเพราะ annotation convention ต่างกัน (ForcedAlignment ยืด GT ให้เต็ม clip, "
+        "04.mp4 ใช้ช่วงสัญลักษณ์จริง) ไม่ใช่ aligner regression\n"
+        "4. สำหรับ Gloss config แนะนำ Frame Accuracy (26.2%) หรือ % any-overlap (97.3%) "
+        "แทน IoU@0.5 เพราะไม่อ่อนไหวต่อความกว้างของ GT\n"
+        "5. 57 clips ที่ SEA detect K=0 segments เป็น hard limit ของ E4s-1 — "
+        "ปรับ threshold sign-b=30/sign-o=50 หรือใช้ pose-based heuristic fallback "
+        "(เช่น hand motion peaks) แทน uniform split",
     )
     style_table(table)
 

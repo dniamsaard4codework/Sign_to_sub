@@ -752,6 +752,96 @@ If a clean rerun is needed, add `--overwrite`.
 
 **Status:** ✅ Config #3 regression resolved as annotation-convention artifact, not aligner regression. Report `Gloss_Labeling_Report_Filled.docx` updated 24 พ.ค. 2569 with this analysis.
 
+### 14.7 Architectural Mismatch — ทำไม Configs ที่มี sil ถึงผลแย่ลง (resolved 25 พ.ค. 2569)
+
+**Finding:** ทุก config ที่ใส่ sil tokens ใน input (#2, #4, #5) ผลตกหนัก ไม่ใช่เพราะ DP ทำงานผิด แต่เป็นเพราะ **architectural mismatch ระหว่าง SEA E4s-1 segmenter กับการ model silence**
+
+**Evidence — Distinct fallback clips per config:**
+
+| Config | Tokens/clip avg | Distinct fallback clips | เพิ่มจาก base (57) | Why |
+|---:|---:|---:|---:|---|
+| 1 (CC, no sil) | 1.0 | 57 | base | embedding หาย |
+| 2 (CC + sil) | 3.0 | **142** | **+85** | K < T (SEA ไม่มี sil segment) |
+| 3 (Gloss, no sil) | 1.5 | 60 | +3 | embedding หาย (เกือบเท่า base) |
+| 4 (Gloss + sil) | 3.5 | **154** | **+97** | K < T |
+| 5 (Gloss + numbered sil) | 3.5 | **154** | **+97** | K < T (เหมือน #4) |
+
+**Root cause:**
+
+SEA E4s-1 ถูก train บน **binary classification: "frame นี้กำลังทำท่าอยู่หรือไม่?"** → output คือ SIGN segments **เฉพาะตอน active signing** (ไม่สร้าง segment สำหรับช่วงพัก/sil) เป็นการออกแบบโดยตั้งใจ ไม่ใช่ bug
+
+ปัญหาเกิดเมื่อ input config มี sil tokens:
+
+```text
+SEA output     : K segments (active signing only)
+Config 2 input : T tokens = [sil, word, sil]
+                 → ถ้า K < T → DP มี segments ไม่พอ → fallback uniform
+                 → ถ้า K ≥ T → DP ถูกบังคับให้ assign sil ให้ word-segment ที่ผิด
+```
+
+**Distribution of SIGN segments per clip (verified ทั้ง 1,132 clips):**
+
+| K (segments/clip) | จำนวน clips | % |
+|---:|---:|---:|
+| 0 | 57 | 5.0% |
+| 1 | 40 | 3.5% |
+| 2 | 45 | 4.0% |
+| 3 | 70 | 6.2% |
+| 4+ | 920 | 81.3% |
+| Mean K = 7.64, Median = 7 | | |
+
+ดังนั้น K<3 = 142 clips ตรงกับ Config 2 fallback (T=3) เป๊ะ K<4 = 212 clips ขณะที่ Config 4/5 fallback = 154 (subset เพราะคลิปที่มี Gloss=1 token ต้องการ T=3, ไม่ใช่ T=4)
+
+**ผลกระทบ 2 ทาง (corrected with per-pair data):**
+
+ตารางต่อไปนี้แยก pairs ที่ผ่าน DP กับ pairs ที่ตก fallback uniform ออกจากกัน:
+
+| Config | DP pairs (count) | DP mean IoU | DP hit@0.5 | Fallback pairs (count) | Fallback mean IoU | Fallback hit@0.5 |
+|---:|---:|---:|---:|---:|---:|---:|
+| **1** (CC, no sil) | 1,075 | **0.608** | **73.5%** | 57 | 0.302 | **0.0%** |
+| **2** (CC + sil) | 2,970 | 0.127 | 7.0% | 426 | 0.738 | **92.5%** |
+| **3** (Gloss, no sil) | 1,640 | 0.217 | 3.7% | 73 | 0.962 | **100%** |
+| **4** (Gloss + sil) | 3,482 | 0.154 | 11.1% | 495 | 0.709 | **88.3%** |
+| **5** (Gloss + num sil) | 3,482 | 0.154 | 11.0% | 495 | 0.711 | **88.3%** |
+
+**Key insights (corrected):**
+
+1. **DP มีประสิทธิภาพดีเฉพาะ Config 1** (hit 73.5%) — เมื่อมี sil tokens ใน input, DP ทำได้แย่มาก (Config 2: 7%, Config 4: 11.1%) เพราะ per-token softmax บังคับให้ DP จับ segment แม้ sil token ไม่มี real signal
+2. **Fallback uniform บังเอิญตรงโครงสร้าง GT** ใน sil-bearing configs — Config 4 fallback hit 88.3%, Config 2 fallback hit 92.5% (ทั้ง uniform split และ GT แบ่ง clip เท่า ๆ กันด้วย sil)
+3. **53% ของ hits ของ Config 4** มาจาก fallback (437/825) ไม่ใช่ DP → F1 ของ Config 4 ที่ดูสูงกว่า Config 3 มาจาก fallback ไม่ใช่ aligner ทำงานดี
+
+**ทำไม Config 4/5 F1 (~21%) ดูดีกว่า Config 3 (7.8%) ทั้งที่มี sil เพิ่ม?**
+
+ไม่ใช่เพราะ sil modeling ทำงานดี และไม่ใช่เพราะ GT แคบลง (avg pred width Config 4 = 0.61s, ratio = 0.37 — ใกล้เคียง Config 3 ratio 0.30) — เป็นเพราะ **fallback uniform บังเอิญตรง GT structure**:
+
+| | Config 3 | Config 4 |
+|---|---:|---:|
+| Avg tokens/clip | 1.51 | 3.51 |
+| Avg pred width | 1.163 s | 0.606 s |
+| Avg GT width | 3.835 s | 1.652 s |
+| Pred/GT ratio | 0.303 | 0.367 |
+| DP-only hit% | 3.7% | 11.1% |
+| Fallback hit% | 100% | 88.3% |
+| Fallback contribution to F1 | 73/133 = 55% | 437/825 = 53% |
+
+Config 4 มี clips fallback มากกว่า (495 vs 73) และทุก clip มี GT structure ที่ match uniform → ได้ hits จาก fallback มากกว่า → F1 ดูสูงกว่า
+
+**ทำไม Config 5 (numbered sil) ≈ Config 4?**
+
+ตรวจสอบ predictions: 91.7% ของ pred intervals **identical กัน** ระหว่าง Config 4 และ 5 (3,645 / 3,977 pairs) — Numbered sil (sil1, sil2) ไม่ช่วย DP แยกแยะ segment ได้อย่างมีนัยสำคัญ เพราะ SEA ไม่มี sil segments อยู่แล้ว — numbered sil เพิ่มความเฉพาะเจาะจงของ token embedding (text branch) แต่ไม่มี structure ใน SIGN tier (sign branch) ให้ DP ใช้
+
+**Implications สำหรับการพัฒนาต่อ:**
+
+1. **สถาปัตยกรรมปัจจุบันไม่เหมาะสำหรับ sil modeling** — ปัญหาอยู่ที่ segmenter ไม่ใช่ DP
+2. **ทางแก้ที่ดีกว่า (เรียงจากง่ายไปยาก):**
+   - **(A)** Post-processing เติม sil intervals ระหว่าง word predictions โดยไม่ผ่าน DP → ได้ sil ที่ถูกต้องโดยไม่กระทบ word accuracy
+   - **(B)** Synthesize "sil segments" ระหว่าง SIGN segments ก่อนเข้า DP → DP มี K-equivalent ให้จับคู่
+   - **(C)** ปรับ DP cost function ให้ sil tokens คาดหวัง low-similarity (skip embedding หรือใช้ uniform fill)
+   - **(D)** Fine-tune SEA E4s-1 ให้ output multi-class (sign / sil / transition) แทน binary
+3. **อย่ารายงาน Config 2/4/5 เป็นผลของ "sil modeling แย่"** — รายงานเป็น "limitation ของ current architecture"
+
+**Status:** ✅ Architectural mismatch identified — ตอบคำถามว่าทำไม sil-bearing configs ผลตก เพิ่มทางแก้ 4 ทาง สำหรับงานต่อไป
+
 ### 14.5 ELAN Comparison EAFs
 
 Generated with:
