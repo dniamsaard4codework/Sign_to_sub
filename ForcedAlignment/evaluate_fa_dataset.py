@@ -344,12 +344,18 @@ def parse_configs(spec: str) -> list[EvalConfig]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate ForcedAlignment Task 2 predictions.")
-    parser.add_argument("--eaf-dir", type=Path, default=DEFAULT_EAF_DIR)
-    parser.add_argument("--pred-dir", type=Path, default=DEFAULT_PRED_DIR)
-    parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
-    parser.add_argument("--configs", default="all")
-    parser.add_argument("--threshold", type=float, default=0.5)
-    parser.add_argument("--fps", type=int, default=FPS_DEFAULT)
+    parser.add_argument("--eaf-dir", type=Path, default=DEFAULT_EAF_DIR,
+                        help="Directory of ground-truth EAF files (default: ForcedAlignment/elan_forced_alignment/)")
+    parser.add_argument("--pred-dir", type=Path, default=DEFAULT_PRED_DIR,
+                        help="Directory of prediction CSVs from run_forced_alignment.py (default: output/predictions/)")
+    parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR,
+                        help="Where to write evaluation CSVs (default: output/evaluation/)")
+    parser.add_argument("--configs", default="all",
+                        help="Configs to evaluate: 'all' or comma list (e.g. '1,3') matching prediction CSV keys")
+    parser.add_argument("--threshold", type=float, default=0.5,
+                        help="IoU threshold for Precision/Recall/F1 'match' (default: 0.5)")
+    parser.add_argument("--fps", type=int, default=FPS_DEFAULT,
+                        help="Frame rate for frame-accuracy metric (default: 25)")
     args = parser.parse_args()
 
     rows = [

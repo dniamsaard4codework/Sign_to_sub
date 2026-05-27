@@ -1,0 +1,172 @@
+diff --git a/examples/MMPT/mmpt/models/mmfusion.py b/examples/MMPT/mmpt/models/mmfusion.py
+index 37ff6909..fcfe0243 100644
+--- a/examples/MMPT/mmpt/models/mmfusion.py
++++ b/examples/MMPT/mmpt/models/mmfusion.py
+@@ -48,7 +48,7 @@ class MMPTModel(nn.Module):
+                 torch.load('pretrained_models/s3d_howto100m.pth'))
+         from transformers import AutoTokenizer
+         tokenizer = AutoTokenizer.from_pretrained(
+-            config.dataset.bert_name, use_fast=config.dataset.use_fast
++            config.dataset.bert_name, use_fast=config.dataset.get("use_fast", True)
+         )
+         from ..processors import Aligner
+         aligner = Aligner(config.dataset)
+@@ -120,8 +120,9 @@ class MMFusion(nn.Module):
+         # 0 means no iso; 1-12 means iso up to that layer.
+         self.num_hidden_layers = transformer_config.num_hidden_layers
+         self.last_iso_layer = 0
+-        if config.dataset.num_iso_layer is not None:
+-            self.last_iso_layer = config.dataset.num_iso_layer - 1 + 1
++        num_iso_layer = config.dataset.get("num_iso_layer", None)
++        if num_iso_layer is not None:
++            self.last_iso_layer = num_iso_layer - 1 + 1
+ 
+         if config.model.mm_encoder_cls is not None:
+             mm_encoder_cls = getattr(transformermodel, config.model.mm_encoder_cls)
+diff --git a/examples/MMPT/mmpt/processors/dsprocessor.py b/examples/MMPT/mmpt/processors/dsprocessor.py
+index 9b0ad4b4..863c0df4 100644
+--- a/examples/MMPT/mmpt/processors/dsprocessor.py
++++ b/examples/MMPT/mmpt/processors/dsprocessor.py
+@@ -12,7 +12,6 @@ import math
+ from collections import defaultdict
+ 
+ import numpy as np
+-import pandas as pd
+ import torch
+ 
+ from .processor import (
+diff --git a/examples/MMPT/mmpt/processors/dsprocessor_sign.py b/examples/MMPT/mmpt/processors/dsprocessor_sign.py
+index 5f53469e..2a39fe74 100644
+--- a/examples/MMPT/mmpt/processors/dsprocessor_sign.py
++++ b/examples/MMPT/mmpt/processors/dsprocessor_sign.py
+@@ -10,7 +10,6 @@ import math
+ from collections import defaultdict
+ 
+ import numpy as np
+-import pandas as pd
+ import torch
+ 
+ from .processor import (
+@@ -271,6 +270,7 @@ class ASLSignMetaProcessor(MetaProcessor):
+     def __init__(self, config):
+         super().__init__(config)
+ 
++        import pandas as pd
+         vfeat_dir = config.vfeat_dir
+         split_path = self._get_split_path(config)
+         metadata_df = pd.read_csv(config.metadata_path, dtype=str)
+@@ -392,6 +392,7 @@ class SignCLIPPretrainMetaProcessor(MetaProcessor):
+         if config.debug:
+             config.split = 'test'
+ 
++        import pandas as pd
+         self.vfeat_dir = config.vfeat_dir
+         self.task = config.task
+         split_path = self._get_split_path(config)
+@@ -460,6 +461,7 @@ class SignCLIPMetaProcessor(MetaProcessor):
+         self.data = []
+ 
+         if config.test_in_vocab:
++            import pandas as pd
+             vocab_path = './data_stat_sp_concept_dis.csv'
+             vocab_df = pd.read_csv(vocab_path)
+             vocab_df = vocab_df[vocab_df['count'] > 20]
+@@ -722,6 +724,7 @@ class SignCLIPSuisseMetaProcessor(MetaProcessor):
+         super().__init__(config)
+         random.seed(42)
+ 
++        import pandas as pd
+         self.pose_processer = SignCLIPPoseProcessor(config) # call pose_processer by meta_processor itself
+         split = 'val' if config.split == 'valid' else config.split
+         metadata_df = pd.read_csv(config[f'{split}_path'], dtype=str)
+diff --git a/examples/MMPT/mmpt/processors/processor.py b/examples/MMPT/mmpt/processors/processor.py
+index 03769201..55acc435 100644
+--- a/examples/MMPT/mmpt/processors/processor.py
++++ b/examples/MMPT/mmpt/processors/processor.py
+@@ -87,12 +87,12 @@ class Aligner(object):
+     """
+     def __init__(self, config):
+         """__init__ needs to be light weight for more workers/threads."""
+-        self.split = config.split
++        self.split = config.get("split", "test")
+         self.max_video_len = config.max_video_len
+         self.max_len = config.max_len
+         from transformers import AutoTokenizer
+         tokenizer = AutoTokenizer.from_pretrained(
+-            str(config.bert_name), use_fast=config.use_fast
++            str(config.bert_name), use_fast=config.get("use_fast", True)
+         )
+         self.cls_token_id = tokenizer.cls_token_id
+         self.sep_token_id = tokenizer.sep_token_id
+diff --git a/examples/MMPT/mmpt/tasks/task.py b/examples/MMPT/mmpt/tasks/task.py
+index c556eff3..7f910fbe 100644
+--- a/examples/MMPT/mmpt/tasks/task.py
++++ b/examples/MMPT/mmpt/tasks/task.py
+@@ -22,9 +22,10 @@ class Task(object):
+         determine whether to load a hard-coded task or config from a generic one.
+         via if a task string is available in config.
+         """
+-        if config.task is not None:
++        task_name = config.get("task", None)
++        if task_name is not None:
+             # TODO (huxu): expand the search scope.
+-            task_cls = getattr(tasks, config.task)
++            task_cls = getattr(tasks, task_name)
+             return task_cls(config)
+         else:
+             return Task(config)
+diff --git a/examples/MMPT/mmpt/utils/load_config.py b/examples/MMPT/mmpt/utils/load_config.py
+index 842388a5..c2195a35 100644
+--- a/examples/MMPT/mmpt/utils/load_config.py
++++ b/examples/MMPT/mmpt/utils/load_config.py
+@@ -55,8 +55,8 @@ def load_config(args=None, config_file=None, overwrite_fairseq=False):
+ def recursive_config(config_path):
+     """allows for stacking of configs in any depth."""
+     config = OmegaConf.load(config_path)
+-    if config.includes is not None:
+-        includes = config.includes
++    includes = config.get("includes", None)
++    if includes is not None:
+         config.pop("includes")
+         base_config = recursive_config(includes)
+         config = OmegaConf.merge(base_config, config)
+diff --git a/examples/MMPT/projects/retri/signclip_bsl/bobsl_islr_finetune_long_context.yaml b/examples/MMPT/projects/retri/signclip_bsl/bobsl_islr_finetune_long_context.yaml
+index 231d8d60..04e06e8a 100644
+--- a/examples/MMPT/projects/retri/signclip_bsl/bobsl_islr_finetune_long_context.yaml
++++ b/examples/MMPT/projects/retri/signclip_bsl/bobsl_islr_finetune_long_context.yaml
+@@ -40,12 +40,12 @@ fairseq:
+     ddp_backend: no_c10d
+     max_epoch: 25
+   checkpoint:
+-    restore_file: /users/zifan/sign_clip/runs/retri_v1_1/baseline_temporal/checkpoint_best.pt
++    restore_file: runs/retri_v1_1/baseline_temporal/checkpoint_best.pt
+     no_epoch_checkpoints: true
+     reset_optimizer: true
+     reset_dataloader: true
+     reset_meters: true
+-    save_dir: /users/zifan/sign_clip/runs/retri_bsl/bobsl_islr_finetune
++    save_dir: runs/retri_bsl/bobsl_islr_finetune
+ task_type: sweep_small
+ model:
+   model_cls: MMFusionSeparate
+@@ -57,4 +57,4 @@ model:
+ loss:
+   loss_cls: MMContraLoss
+ eval:
+-  save_path: /users/zifan/sign_clip/runs/retri_bsl/bobsl_islr_finetune
++  save_path: runs/retri_bsl/bobsl_islr_finetune
+diff --git a/examples/MMPT/scripts_bsl/extract_episode_features.py b/examples/MMPT/scripts_bsl/extract_episode_features.py
+index 5d89f8d2..d1047f05 100644
+--- a/examples/MMPT/scripts_bsl/extract_episode_features.py
++++ b/examples/MMPT/scripts_bsl/extract_episode_features.py
+@@ -74,8 +74,8 @@ def read_srt(srt_path):
+ model_configs = {
+     "multilingual": "signclip_v1_1/baseline_temporal_inference",
+     "bsl": "signclip_bsl/bobsl_islr_finetune_long_context",
+-    "bsl_lip": "signclip_bsl/bobsl_islr_lip_long_context",
+-    "bsl_lip_only": "signclip_bsl/bobsl_islr_lip_only_long_context",
++    "bsl_lip": "signclip_bsl/bobsl_islr_lip",
++    "bsl_lip_only": "signclip_bsl/bobsl_islr_lip_only",
+     "asl": "signclip_asl/asl_finetune", # fine-tuned on three ASL datasets
+     "suisse": "signclip_suisse/suisse_finetune", # fine-tuned on Signsuisse
+ }

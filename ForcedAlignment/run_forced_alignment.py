@@ -702,26 +702,41 @@ def selected_rows_with_existing_manifest(out_dir: Path, eaf_dir: Path, video_roo
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run Task 2 on the ForcedAlignment dataset.")
-    parser.add_argument("--eaf-dir", type=Path, default=DEFAULT_EAF_DIR)
-    parser.add_argument("--video-root", type=Path, default=None)
-    parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
-    parser.add_argument("--configs", default="all")
-    parser.add_argument("--only-ids", default=None, help="Comma/range list, e.g. 1,500,1132 or 1-10")
-    parser.add_argument("--preflight-only", action="store_true")
-    parser.add_argument("--skip-pose", action="store_true")
-    parser.add_argument("--skip-seg", action="store_true")
-    parser.add_argument("--skip-emb", action="store_true")
-    parser.add_argument("--skip-align", action="store_true")
-    parser.add_argument("--skip-eval", action="store_true")
-    parser.add_argument("--overwrite", action="store_true")
-    parser.add_argument("--pose-num-workers", type=int, default=1)
-    parser.add_argument("--sign-b", type=int, default=30)
-    parser.add_argument("--sign-o", type=int, default=50)
-    parser.add_argument("--model-name", default="multilingual")
-    parser.add_argument("--language-tag", default="<en> <bfi>")
-    parser.add_argument("--gap-penalty", type=float, default=2.0)
-    parser.add_argument("--coverage-penalty", type=float, default=0.5)
-    parser.add_argument("--window-pad", type=float, default=0.5)
+    parser.add_argument("--eaf-dir", type=Path, default=DEFAULT_EAF_DIR,
+                        help="Directory of ground-truth EAF files (default: ForcedAlignment/elan_forced_alignment/)")
+    parser.add_argument("--video-root", type=Path, default=None,
+                        help="Directory containing source MP4s (default: auto-discovered under ForcedAlignment/)")
+    parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR,
+                        help="Output directory for all generated artifacts (default: ForcedAlignment/output/)")
+    parser.add_argument("--configs", default="all",
+                        help="Configs to run: 'all' or comma list of keys, e.g. '1,3' (5 configs available; see PLAN doc)")
+    parser.add_argument("--only-ids", default=None,
+                        help="Restrict to specific clip IDs: comma/range list, e.g. 1,500,1132 or 1-10")
+    parser.add_argument("--preflight-only", action="store_true",
+                        help="Validate manifest + required tiers, then exit without running any compute")
+    parser.add_argument("--skip-pose", action="store_true", help="Skip Phase 2 (videos_to_poses)")
+    parser.add_argument("--skip-seg", action="store_true", help="Skip Phase 3 (SEA segmentation)")
+    parser.add_argument("--skip-emb", action="store_true", help="Skip Phase 4 (SignCLIP embeddings)")
+    parser.add_argument("--skip-align", action="store_true", help="Skip Phase 5 (DP alignment + EAF injection)")
+    parser.add_argument("--skip-eval", action="store_true", help="Skip Phase 7 (evaluation CSVs)")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Re-run every phase even if outputs already exist")
+    parser.add_argument("--pose-num-workers", type=int, default=1,
+                        help="Workers for videos_to_poses (default: 1)")
+    parser.add_argument("--sign-b", type=int, default=30,
+                        help="SEA segmenter sign-B threshold (default: 30)")
+    parser.add_argument("--sign-o", type=int, default=50,
+                        help="SEA segmenter sign-O threshold (default: 50)")
+    parser.add_argument("--model-name", default="multilingual",
+                        help="SignCLIP variant: multilingual | bsl | asl (default: multilingual)")
+    parser.add_argument("--language-tag", default="<en> <bfi>",
+                        help="SignCLIP language tag prefix (default: '<en> <bfi>')")
+    parser.add_argument("--gap-penalty", type=float, default=2.0,
+                        help="DP gap penalty between non-contiguous segments (default: 2.0)")
+    parser.add_argument("--coverage-penalty", type=float, default=0.5,
+                        help="DP coverage penalty for duration mismatch (default: 0.5)")
+    parser.add_argument("--window-pad", type=float, default=0.5,
+                        help="Seconds padded to candidate segment window if empty (default: 0.5)")
     args = parser.parse_args()
 
     t0 = time.time()

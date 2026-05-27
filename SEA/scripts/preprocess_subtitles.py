@@ -78,9 +78,10 @@ def convert_verb_tense(sentence, target_tense):
 def nearest_dilation_1d(input_tensor, dilation_factor):
     """
     Perform nearest dilation on a 1D tensor along its last dimension.
-    Note: This function moves the tensor to GPU.
+    Uses GPU when available, falls back to CPU otherwise.
     """
-    input_tensor = input_tensor.cuda()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    input_tensor = input_tensor.to(device)
     input_tensor = input_tensor.squeeze(-1)
     output_tensor = torch.zeros_like(input_tensor)
     for i, mat in enumerate(input_tensor):
