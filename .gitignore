@@ -65,3 +65,9 @@ __MACOSX/
 
 # MS Office lock files
 ~$*
+
+# Other generated artifacts in example_alignment that aren't covered above
+example_alignment/ablation_per_sentence/clips/
+
+# Repo bundles / archives
+*.zip
