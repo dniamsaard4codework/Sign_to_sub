@@ -5,9 +5,12 @@
 เป็นฐาน + ปรับให้รันบน Windows + GPU Blackwell + รองรับ TSL ด้วย SignCLIP
 ทั้ง 3 โมเดล (BSL / Multilingual / ASL)
 
+> **เพิ่งมาถึง?** อยาก verify ตัวเลขใน paper ก่อนตัดสินใจติดตั้งเต็มรูปแบบ → ข้ามไป [Evaluation-Only Quick Start](#evaluation-only-quick-start) — รัน ~30 วินาที, ไม่ต้องลง PyTorch / mediapipe / fairseq, ใช้ cached outputs ใน repo ทำเลย
+>
 > **Quick navigation**
 >
 > - [Project Status & Latest Results](#project-status--latest-results)
+> - [Evaluation-Only Quick Start](#evaluation-only-quick-start) ⭐ (เริ่มที่นี่)
 > - [Hardware & Software Requirements](#hardware--software-requirements)
 > - [Changes from Upstream](#changes-from-upstream)
 > - [Project Structure](#project-structure)
@@ -23,7 +26,6 @@
 > - [Evaluation Methodology Summary](#evaluation-methodology-summary)
 > - [Forced Alignment Dataset](#forced-alignment-dataset)
 > - [What's in the Repo vs What You Must Obtain](#whats-in-the-repo-vs-what-you-must-obtain)
-> - [Evaluation-Only Quick Start](#evaluation-only-quick-start)
 
 ---
 
@@ -149,7 +151,7 @@ The cached outputs in the repo let you re-run **evaluation only** with no source
 | Python **3.11.x** | <https://python.org> / uv | 3.12+ break บาง deps |
 | NVIDIA GPU driver | <https://www.nvidia.com/Download/index.aspx> | สำหรับ CUDA |
 | ELAN (optional) | <https://archive.mpi.nl/tla/elan> | ดู EAF results |
-| ffmpeg (optional) | <https://ffmpeg.org> | crop video อย่างเดียว |
+| ffmpeg | <https://ffmpeg.org> | **required** สำหรับ Step C (`videos_to_poses` อ่าน MP4 ผ่าน ffmpeg) และ ForcedAlignment pose extraction — optional ถ้าใช้แค่ Evaluation-Only Quick Start |
 
 ### Test environment specs
 
@@ -289,6 +291,11 @@ Sign_to_sub/
 │   ├── aligned_output_asl_gloss/{04.vtt,04_no_overlap.vtt}               ← D_ASL_gloss
 │   ├── aligned_output_asl_gloss_word/{04.vtt,04_no_overlap.vtt}          ← D_ASL_word
 │   │
+│   │  ── Historical artifacts (NOT in current 7 experiments — kept for Progress_20042026.md / report reference)
+│   ├── 04.vtt                              ← legacy copy of subtitles/04.vtt (Progress_20042026 era)
+│   ├── aligned_output/04.vtt               ← Experiment A (no embedding) — superseded by B2
+│   ├── aligned_output_with_embedding/04.vtt ← Experiment B1 (BSL standard, untuned) — superseded by B2
+│   │
 │   │  ── Task 2 outputs (default = Gloss_Input, cached in repo)
 │   ├── gloss_labels_pred.csv               ← 889 predictions
 │   ├── gloss_labels_pred.vtt
@@ -411,15 +418,21 @@ python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_
 ### Step 5 — Clone & install SignCLIP (fairseq_signclip)
 
 ```powershell
-# 5a. Clone upstream fairseq fork (skip large dirs to speed up — optional)
+# 5a. Clone upstream fairseq fork
 git clone https://github.com/J22Melody/fairseq.git fairseq_signclip
 
-# 5b. Apply Windows path patches (8 files, 36 lines — required for Windows; harmless on Linux)
+# 5b. Pin to the commit the patch was generated against (a8199440, 2026-03-04).
+#     Without this step, future upstream commits can make `git apply` fail.
+cd fairseq_signclip
+git checkout a8199440
+cd ..
+
+# 5c. Apply Windows path patches (8 files, 36 lines — required for Windows; harmless on Linux)
 cd fairseq_signclip
 git apply ..\patches\fairseq_signclip_windows.patch
 cd ..
 
-# 5c. Editable installs
+# 5d. Editable installs
 cd fairseq_signclip
 pip install -e .
 cd examples\MMPT
@@ -443,7 +456,18 @@ cd ..\..\..
 ```powershell
 pip install gdown
 cd fairseq_signclip\examples\MMPT
+mkdir runs
+
+# Path A — folder download (เร็วถ้าได้ผล แต่ Google Drive folder API พังบ่อย — auth prompt, rate limit, permission change)
 gdown --folder "https://drive.google.com/drive/folders/10q7FxPlicrfwZn7_FgtNqKFDiAJi6CTc?usp=sharing" -O .\runs
+
+# Path B — fallback: download ทีละไฟล์ถ้า Path A พัง
+# 1. เปิด folder URL ด้านบนใน browser → คลิกขวาแต่ละไฟล์ .pt → "Get link" → copy ID หลัง `/d/`
+# 2. รัน 3 บรรทัดด้านล่าง โดยแทน <FILE_ID_*> ด้วย ID ที่ได้:
+# gdown "https://drive.google.com/uc?id=<FILE_ID_BOBSL>" -O runs\bobsl_finetune_checkpoint_best.pt
+# gdown "https://drive.google.com/uc?id=<FILE_ID_MULTI>" -O runs\baseline_temporal_checkpoint_best.pt
+# gdown "https://drive.google.com/uc?id=<FILE_ID_ASL>"   -O runs\asl_finetune_checkpoint_best.pt
+# (ดาวน์โหลดด้วยมือจาก browser ก็ใช้ได้เหมือนกัน — แค่วางไฟล์ใน runs\ แล้วข้ามไปขั้น mkdir+copy)
 
 # จัดวางตาม path ที่ YAML config อ้างอิง
 mkdir runs\retri_bsl\bobsl_islr_finetune
@@ -489,6 +513,14 @@ python -c "import pathlib; p=pathlib.Path('example_alignment/04.pose'); print(p.
 # 5. GPU available end-to-end (most pipeline work uses external libs that auto-pick GPU when CUDA is present)
 python -c "import torch; print('CUDA OK' if torch.cuda.is_available() else 'CPU ONLY', '|', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'no GPU')"
 # expected: CUDA OK | NVIDIA GeForce RTX ...
+
+# 6. videos_to_poses CLI on PATH (installed by pose-format — Step C ใช้คำสั่งนี้)
+videos_to_poses --help
+# expected: usage banner. ถ้า "command not found" → venv ไม่ active หรือ pose-format ลงไม่ครบ
+
+# 7. ffmpeg on PATH (videos_to_poses ต้องใช้ ffmpeg อ่าน MP4)
+ffmpeg -version
+# expected: ffmpeg version ... ถ้า "command not found" → ดู Software Requirements ติดตั้ง ffmpeg ก่อน
 ```
 
 ถ้าทุกอันได้ `OK` หรือ `True` → setup เรียบร้อย
@@ -1215,9 +1247,18 @@ scripts หลักอ่าน tier ตามชื่อ — EAF ของค
 
 ## Evaluation-Only Quick Start
 
-> สำหรับคนที่เพิ่ง clone repo มาแต่ยังไม่มี `04.mp4` — section นี้รัน **ได้เลย** ด้วย cached outputs ที่อยู่ใน git (ไม่ต้อง download อะไรเพิ่ม นอกจาก Python deps ใน Step 1–3 และ 7)
+> สำหรับคนที่เพิ่ง clone repo มาแต่ยังไม่มี `04.mp4` — section นี้รัน **ได้เลย** ด้วย cached outputs ที่อยู่ใน git (ไม่ต้อง download อะไรเพิ่ม)
 
-หลัง clone + Step 1–3 (venv + `pip install -r requirements.txt`) + Step 7 verify check #1 ผ่าน:
+หลัง clone + Step 1 (Python 3.11) + Step 2 (venv) ใช้ **light path** ได้เลย — eval scripts ใช้แค่ stdlib:
+
+```powershell
+venv\Scripts\activate
+pip install -r requirements-eval.txt   # เปล่า/ขั้นต่ำ — ไม่ลง mediapipe / pytorch / fairseq
+```
+
+> ถ้าทำ full setup (Step 3–6) ครบแล้ว ก็ข้ามคำสั่ง `pip install -r requirements-eval.txt` ได้เลย — `requirements.txt` ครอบไว้หมดอยู่แล้ว
+
+จากนั้น:
 
 ```powershell
 venv\Scripts\activate

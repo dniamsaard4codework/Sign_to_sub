@@ -1,0 +1,18 @@
+# Minimal dependencies for the Evaluation-Only Quick Start in README.md.
+#
+# The evaluation scripts (evaluate_all.py, evaluate_all_to_csv.py,
+# evaluate_gloss_labeling.py, ForcedAlignment/evaluate_fa_dataset.py) use only
+# the Python standard library (xml.etree, csv, statistics, pathlib) plus the
+# overlap-fix step writes UTF-8-BOM CSVs.
+#
+# If you only want to reproduce the documented numbers from cached aligned VTT
+# files (see README "Evaluation-Only Quick Start"), this file is sufficient —
+# you do NOT need PyTorch, mediapipe, pose-format, SignCLIP, or any GPU.
+#
+# For the full pipeline (regenerate alignments from source video), install
+# requirements.txt instead.
+
+# Currently the eval scripts have zero third-party imports; leaving this file
+# empty keeps `pip install -r requirements-eval.txt` a successful no-op so
+# the README command always works. Add packages here only if a future eval
+# script introduces a real dependency.
